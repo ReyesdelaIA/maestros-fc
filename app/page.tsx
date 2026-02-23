@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
+import MensajePresidenteCard from "./components/MensajePresidenteCard";
+import RecuerdoMaestroCard from "./components/RecuerdoMaestroCard";
+import StickerDelMesCard from "./components/StickerDelMesCard";
 
 // Evitar caché: siempre traer datos frescos de Supabase
 export const dynamic = "force-dynamic";
@@ -329,14 +332,6 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-xs sm:justify-end">
-            <span className="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1 font-medium text-emerald-300">
-              Temporada actual
-            </span>
-            <span className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-zinc-300">
-              PWA lista para instalar
-            </span>
-          </div>
           <div className="flex justify-end sm:items-end">
             <Link
               href="/admin"
@@ -349,10 +344,15 @@ export default async function Home() {
 
         {/* Resumen del último fin de semana */}
         <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-zinc-50">
-              Resumen del último fin de semana
-            </h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-zinc-50">
+                Resumen del último fin de semana
+              </h2>
+              <span className="rounded-full border border-emerald-500/60 bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
+                dic 2025
+              </span>
+            </div>
             <span className="text-xs text-zinc-400">
               Actualizado automáticamente desde Supabase
             </span>
@@ -772,60 +772,16 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Palabra del Presidente (mitad) + El sticker del mes (mitad) */}
-        <section className="grid gap-4 md:grid-cols-2">
-          {/* Mitad izquierda: Palabra del Presidente */}
-          <section className="flex flex-col rounded-2xl border border-zinc-700/80 bg-gradient-to-b from-zinc-900 to-zinc-950 p-4 shadow-xl">
-            <div className="mb-2 flex justify-start">
-              <span className="inline-flex items-center rounded-full border border-zinc-600/70 bg-zinc-900/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-300">
-                Febrero&nbsp;26
-              </span>
-            </div>
-            <div className="mx-auto w-full max-w-[40%] overflow-hidden rounded-2xl bg-black/40">
-              <div className="aspect-[4/5] w-full">
-                <Image
-                  src="/presidente.png"
-                  alt="Presidente del club"
-                  width={480}
-                  height={600}
-                  className="h-full w-full object-cover object-top"
-                  priority
-                />
-              </div>
-            </div>
-            <h2 className="mt-3 text-center text-sm font-bold uppercase tracking-tight text-zinc-50 md:text-base">
-              MENSAJE DEL PRESIDENTE
-            </h2>
-            <p className="mt-2 text-center text-xs italic leading-relaxed text-zinc-300 md:text-sm">
-              Lorem ipsum dolor sit amet consectetur adipiscing elit convallis id leo risus natoque neque, pretium massa egestas condimentum auctor purus conubia sed ultrices morbi blandit accumsan. Molestie duis malesuada accumsan mollis conubia elementum tempor aliquam maecenas est venenatis.
-            </p>
-          </section>
+        {/* Presidente + Recuerdo Maestro + Sticker del mes — 3 cajas */}
+        <section className="grid gap-4 md:grid-cols-3">
+          {/* Izquierda: Mensaje del Presidente */}
+          <MensajePresidenteCard />
 
-          {/* Mitad derecha: El sticker del mes — misma estructura pero tono más lúdico */}
-          <section className="flex flex-col rounded-2xl border-2 border-amber-400/60 bg-gradient-to-br from-amber-950/90 via-orange-950/80 to-yellow-950/70 p-4 shadow-lg shadow-amber-900/40">
-            <div className="mb-2 flex justify-start">
-              <span className="inline-flex items-center rounded-full border border-amber-400/80 bg-amber-900/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-100">
-                Febrero&nbsp;26
-              </span>
-            </div>
-            <div className="mx-auto w-full max-w-[40%] overflow-hidden rounded-2xl border border-amber-500/60 bg-black/30">
-              <div className="aspect-[4/5] w-full flex items-center justify-center">
-                <Image
-                  src="/stiker_feb.png"
-                  alt="Sticker del mes"
-                  width={480}
-                  height={600}
-                  className="h-full w-full object-contain"
-                />
-              </div>
-            </div>
-            <h2 className="mt-3 text-center text-sm font-bold uppercase tracking-tight text-amber-100 md:text-base font-sticker">
-              EL STICKER DEL MES
-            </h2>
-            <p className="mt-2 text-center text-xs italic leading-relaxed text-amber-200/90 md:text-sm">
-              Lorem ipsum dolor sit amet consectetur adipiscing elit convallis id leo risus natoque neque, pretium massa egestas condimentum auctor purus conubia sed ultrices morbi blandit accumsan. Molestie duis malesuada accumsan mollis conubia elementum tempor aliquam maecenas est venenatis.
-            </p>
-          </section>
+          {/* Centro: El recuerdo Maestro — interactivo con pop-up */}
+          <RecuerdoMaestroCard />
+
+          {/* Derecha: El sticker del mes — interactivo con pop-up */}
+          <StickerDelMesCard />
         </section>
 
         {/* Ranking de goleadores y asistencias por equipo (placeholder) */}

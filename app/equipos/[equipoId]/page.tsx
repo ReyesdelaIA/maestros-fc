@@ -20,6 +20,16 @@ type Jugador = {
   asistencias?: number | null;
 };
 
+/** Parsea fecha YYYY-MM-DD como fecha local (evita desfase de 1 día por timezone) */
+function parseFechaLocal(fechaStr: string | null): Date | null {
+  if (!fechaStr) return null;
+  const match = fechaStr.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return null;
+  const [, y, m, d] = match;
+  const fecha = new Date(parseInt(y!, 10), parseInt(m!, 10) - 1, parseInt(d!, 10));
+  return Number.isNaN(fecha.getTime()) ? null : fecha;
+}
+
 // Normaliza nombres para comparar sin tildes y sin diferencias de may/min.
 function normalizarNombreClave(valor: string | null | undefined): string {
   if (!valor) return "";
@@ -31,9 +41,8 @@ function normalizarNombreClave(valor: string | null | undefined): string {
 }
 
 function calcularEdad(fechaStr: string | null): number | null {
-  if (!fechaStr) return null;
-  const fecha = new Date(fechaStr);
-  if (Number.isNaN(fecha.getTime())) return null;
+  const fecha = parseFechaLocal(fechaStr);
+  if (!fecha) return null;
 
   const hoy = new Date();
   let edad = hoy.getFullYear() - fecha.getFullYear();
@@ -45,9 +54,8 @@ function calcularEdad(fechaStr: string | null): number | null {
 }
 
 function formatearFechaCumple(fechaStr: string | null): string {
-  if (!fechaStr) return "";
-  const fecha = new Date(fechaStr);
-  if (Number.isNaN(fecha.getTime())) return fechaStr;
+  const fecha = parseFechaLocal(fechaStr);
+  if (!fecha) return fechaStr ?? "";
 
   return fecha.toLocaleDateString("es-CL", {
     day: "2-digit",
@@ -57,9 +65,8 @@ function formatearFechaCumple(fechaStr: string | null): string {
 }
 
 function esCumpleañosHoy(fechaStr: string | null): boolean {
-  if (!fechaStr) return false;
-  const fecha = new Date(fechaStr);
-  if (Number.isNaN(fecha.getTime())) return false;
+  const fecha = parseFechaLocal(fechaStr);
+  if (!fecha) return false;
 
   const hoy = new Date();
   return (
@@ -127,10 +134,13 @@ async function getJugadoresConStats(equipoId: string) {
   }
 
   const withStats: Jugador[] = raw.map((j) => {
-    const fullNameKey = normalizarNombreClave(
-      `${j.nombre} ${j.apellido}`,
-    );
-    const stats = goleadoresMap.get(fullNameKey);
+    const fullNameKey = normalizarNombreClave(`${j.nombre} ${j.apellido}`);
+    const apodoApellidoKey = j.apodo
+      ? normalizarNombreClave(`${j.apodo} ${j.apellido}`)
+      : "";
+    const stats =
+      goleadoresMap.get(fullNameKey) ??
+      (apodoApellidoKey ? goleadoresMap.get(apodoApellidoKey) : undefined);
     return {
       ...j,
       goles: stats?.goles ?? 0,

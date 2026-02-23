@@ -35,8 +35,8 @@ UPDATE jugadores SET posicion = 'DEL' WHERE apellido IN ('Domínguez', 'Domingue
 -- DEF Nico / Nicolas Domínguez / Dominguez
 UPDATE jugadores SET posicion = 'DEF' WHERE apellido IN ('Domínguez', 'Dominguez') AND (apodo ILIKE '%Nico%' OR nombre ILIKE '%Nico%' OR nombre ILIKE '%Nicolas%');
 
--- DEL Huaso (con H) / Uguaso / Guaso — Chenique / Echeñique / Echenique
-UPDATE jugadores SET posicion = 'DEL' WHERE apellido IN ('Chenique', 'Echeñique', 'Echenique') AND (apodo ILIKE '%Huaso%' OR apodo ILIKE '%Uguaso%' OR apodo ILIKE '%Guaso%');
+-- DEL Huaso — Chenique / Echeñique / Echenique (apodo correcto: Huaso con H)
+UPDATE jugadores SET posicion = 'DEL' WHERE apellido IN ('Chenique', 'Echeñique', 'Echenique') AND (apodo ILIKE '%Huaso%' OR apodo ILIKE '%Uguaso%');
 
 -- DEF Cristian Gana
 UPDATE jugadores SET posicion = 'DEF' WHERE apellido = 'Gana' AND (nombre ILIKE '%Cristian%' OR apodo ILIKE '%Cristian%');
