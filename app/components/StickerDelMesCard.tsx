@@ -27,7 +27,7 @@ export default function StickerDelMesCard() {
 
   return (
     <>
-      <section className="flex flex-col rounded-2xl border-2 border-amber-400/60 bg-gradient-to-br from-amber-950/90 via-orange-950/80 to-yellow-950/70 p-4 shadow-lg shadow-amber-900/40">
+      <section className="flex h-full min-h-[420px] flex-col rounded-2xl border-2 border-amber-400/60 bg-gradient-to-br from-amber-950/90 via-orange-950/80 to-yellow-950/70 p-4 shadow-lg shadow-amber-900/40">
         <div className="mb-2 flex justify-start">
           <span className="inline-flex items-center rounded-full border border-amber-400/80 bg-amber-900/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-100">
             Febrero&nbsp;26
@@ -39,12 +39,12 @@ export default function StickerDelMesCard() {
           className="group mx-auto block w-full max-w-[85%] overflow-hidden rounded-2xl border border-amber-500/60 bg-black/30 transition active:scale-[0.98]"
           aria-label="Abrir sticker del mes"
         >
-          <div className="aspect-[4/5] w-full">
+          <div className="relative h-44 w-full">
             <Image
-              src="/stiker_feb.png"
+              src="/stikerperro.png"
               alt="Sticker del mes"
-              width={480}
-              height={600}
+              fill
+              sizes="240px"
               className="h-full w-full object-cover object-center group-hover:opacity-90"
             />
           </div>
@@ -122,7 +122,7 @@ export default function StickerDelMesCard() {
               </p>
               <div className="mb-5 flex h-[64vh] max-h-[560px] items-center justify-center overflow-hidden rounded-xl border border-amber-500/40 bg-black/30">
                 <Image
-                  src="/stiker_feb.png"
+                  src="/stikerperro.png"
                   alt="Sticker del mes"
                   width={400}
                   height={500}

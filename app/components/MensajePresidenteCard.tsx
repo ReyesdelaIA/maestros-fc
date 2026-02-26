@@ -27,7 +27,7 @@ export default function MensajePresidenteCard() {
 
   return (
     <>
-      <section className="flex flex-col rounded-2xl border border-zinc-700/80 bg-gradient-to-b from-zinc-900 to-zinc-950 p-4 shadow-xl">
+      <section className="flex h-full min-h-[420px] flex-col rounded-2xl border border-zinc-700/80 bg-gradient-to-b from-zinc-900 to-zinc-950 p-4 shadow-xl">
         <div className="mb-2 flex justify-start">
           <span className="inline-flex items-center rounded-full border border-zinc-600/70 bg-zinc-900/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-300">
             Febrero&nbsp;26
@@ -39,12 +39,12 @@ export default function MensajePresidenteCard() {
           className="group mx-auto w-full max-w-[85%] overflow-hidden rounded-2xl bg-black/40 transition active:scale-[0.98]"
           aria-label="Abrir mensaje"
         >
-          <div className="aspect-[4/5] w-full">
+          <div className="relative h-44 w-full">
             <Image
               src="/presidente.png"
               alt="Presidente del club"
-              width={480}
-              height={600}
+              fill
+              sizes="240px"
               className="h-full w-full object-cover object-top group-hover:opacity-90"
               priority
             />

@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import MensajePresidenteCard from "./components/MensajePresidenteCard";
 import RecuerdoMaestroCard from "./components/RecuerdoMaestroCard";
 import StickerDelMesCard from "./components/StickerDelMesCard";
+import EntrevistaMaestraCard from "./components/EntrevistaMaestraCard";
 
 // Evitar caché: siempre traer datos frescos de Supabase
 export const dynamic = "force-dynamic";
@@ -40,6 +41,7 @@ const RIVAL_LOGO: Record<string, string> = {
   "Palestino": "/palestino.png",
   "Boedo": "/boedo.png",
   "Cachamama": "/cachamama.png",
+  CSYDA: "/CSYDA.png",
 };
 
 type UltimoResultado = {
@@ -99,6 +101,14 @@ type Goleador = {
   temporada: string;
 };
 
+type JugadorCumple = {
+  id: string;
+  nombre: string;
+  apodo: string | null;
+  apellido: string;
+  fecha_nacimiento: string | null;
+};
+
 type Titulo = {
   id: string;
   equipo: string;
@@ -106,14 +116,70 @@ type Titulo = {
   detalle: string;
 };
 
+/** Parsea fecha YYYY-MM-DD como fecha local (evita desfase de 1 día por timezone) */
+function parseFechaLocal(fechaStr: string | null): Date | null {
+  if (!fechaStr) return null;
+  const match = fechaStr.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return null;
+  const [, y, m, d] = match;
+  const fecha = new Date(
+    parseInt(y!, 10),
+    parseInt(m!, 10) - 1,
+    parseInt(d!, 10),
+  );
+  return Number.isNaN(fecha.getTime()) ? null : fecha;
+}
+
+function calcularProximoCumple(
+  jugadores: JugadorCumple[],
+): { jugador: JugadorCumple; fecha: Date; diasRestantes: number } | null {
+  if (!jugadores.length) return null;
+
+  const hoy = new Date();
+  const hoyInicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+
+  let mejor:
+    | { jugador: JugadorCumple; fecha: Date; diasRestantes: number }
+    | null = null;
+
+  for (const jugador of jugadores) {
+    const nacimiento = parseFechaLocal(jugador.fecha_nacimiento);
+    if (!nacimiento) continue;
+
+    let cumpleEsteAnio = new Date(
+      hoyInicio.getFullYear(),
+      nacimiento.getMonth(),
+      nacimiento.getDate(),
+    );
+
+    if (cumpleEsteAnio < hoyInicio) {
+      cumpleEsteAnio = new Date(
+        hoyInicio.getFullYear() + 1,
+        nacimiento.getMonth(),
+        nacimiento.getDate(),
+      );
+    }
+
+    const diffMs = cumpleEsteAnio.getTime() - hoyInicio.getTime();
+    const diasRestantes = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    if (!mejor || diasRestantes < mejor.diasRestantes) {
+      mejor = { jugador, fecha: cumpleEsteAnio, diasRestantes };
+    }
+  }
+
+  return mejor;
+}
+
 async function getDashboardData() {
   const [
     ultimosResultadosRes,
     posicionesRes,
-    proximosPartidosRes,
     clausuraRes,
+    proximosPartidosRes,
     goleadoresRes,
     titulosRes,
+    jugadoresCumpleRes,
   ] = await Promise.all([
     supabase
       .from("vista_ultimos_resultados")
@@ -143,6 +209,10 @@ async function getDashboardData() {
       .select("id, equipo, anio, detalle")
       .order("equipo", { ascending: true })
       .order("anio", { ascending: true }),
+    supabase
+      .from("jugadores")
+      .select("id, nombre, apodo, apellido, fecha_nacimiento")
+      .not("fecha_nacimiento", "is", null),
   ]);
 
   const ultimosResultados = (ultimosResultadosRes.data ??
@@ -154,6 +224,7 @@ async function getDashboardData() {
   const clausuraError = clausuraRes.error;
   const goleadores = (goleadoresRes.data ?? []) as Goleador[];
   const titulos = (titulosRes.data ?? []) as Titulo[];
+  const jugadoresCumple = (jugadoresCumpleRes.data ?? []) as JugadorCumple[];
 
   return {
     ultimosResultados,
@@ -163,6 +234,7 @@ async function getDashboardData() {
     clausuraError: clausuraError?.message ?? null,
     goleadores,
     titulos,
+    jugadoresCumple,
   };
 }
 
@@ -215,6 +287,7 @@ export default async function Home() {
     clausuraError,
     goleadores,
     titulos,
+    jugadoresCumple,
   } = await getDashboardData();
 
   // Agrupamos datos por categoría para renderizar secciones compactas.
@@ -276,6 +349,16 @@ export default async function Home() {
 
   const totalTitulos = titulosUnicos.length;
 
+  const esTituloAnual = (t: Titulo) =>
+    (t.detalle ?? "").toLowerCase().includes("anual");
+
+  const titulosOrdenadosParaCopas = [...titulosUnicos].sort((a, b) => {
+    const aAnual = esTituloAnual(a);
+    const bAnual = esTituloAnual(b);
+    if (aAnual !== bAnual) return aAnual ? -1 : 1;
+    return a.anio - b.anio || a.detalle.localeCompare(b.detalle, "es");
+  });
+
   // Resumen de títulos ordenado de mayor a menor cantidad (y luego por orden preferido)
   const resumenTitulos = (() => {
     const ordenIndex: Record<string, number> = {};
@@ -287,8 +370,7 @@ export default async function Home() {
       .map((equipo) => {
         const lista = titulosPorEquipo[equipo] ?? [];
         const cantidad = lista.length;
-        const estrellas = "⭐".repeat(Math.min(4, cantidad || 1));
-        return { equipo, cantidad, estrellas, lista };
+        return { equipo, cantidad, lista };
       })
       .sort((a, b) => {
         if (b.cantidad !== a.cantidad) return b.cantidad - a.cantidad;
@@ -302,6 +384,13 @@ export default async function Home() {
       (p) => p.categoria === cat || isMaestrosTeam(p.rival)
     );
   }
+
+  const proximoCumple = calcularProximoCumple(jugadoresCumple);
+  const proximoCumpleFechaEtiqueta =
+    proximoCumple?.fecha.toLocaleDateString("es-CL", {
+      day: "2-digit",
+      month: "short",
+    }) ?? "";
 
   return (
     <div className="min-h-screen bg-black text-zinc-50">
@@ -384,14 +473,14 @@ export default async function Home() {
                   fecha_partido: null,
                 };
               }
-              // Placeholder para Maestros Senior: último partido 2-2 vs Boedo (empate)
+              // Placeholder para Maestros Senior: último partido 1-0 vs CSYDA (victoria)
               if (!ultimo && categoria === "Senior Fútbol") {
                 ultimo = {
                   id: 0,
                   categoria,
-                  rival: "Boedo",
-                  goles_maestros: 2,
-                  goles_rival: 2,
+                  rival: "CSYDA",
+                  goles_maestros: 1,
+                  goles_rival: 0,
                   fecha_partido: null,
                 };
               }
@@ -651,9 +740,10 @@ export default async function Home() {
                           </thead>
                           <tbody>
                             {Array.from({ length: 12 }, (_, i) => i + 1).map((pos) => {
-                              const esMaestros = pos === 9;
+                              const esMaestros = pos === 10;
                               const nombreEquipo = esMaestros ? "Maestros" : `Equipo ${pos}`;
-                              const descendido = pos >= 10;
+                              const promocion = pos === 10;
+                              const descendido = pos >= 11;
                               const campeon = pos === 1;
                               return (
                                 <tr
@@ -670,6 +760,10 @@ export default async function Home() {
                                     {campeon ? (
                                       <span className="inline-flex items-center gap-0.5 rounded bg-amber-900/60 px-1.5 py-0.5 text-[10px] font-medium text-amber-300" title="Campeón">
                                         Campeón
+                                      </span>
+                                    ) : promocion ? (
+                                      <span className="inline-flex items-center gap-0.5 rounded bg-amber-900/60 px-1.5 py-0.5 text-[10px] font-medium text-amber-200" title="Juega promoción">
+                                        Promoción
                                       </span>
                                     ) : descendido ? (
                                       <span className="inline-flex items-center gap-0.5 rounded bg-rose-900/60 px-1.5 py-0.5 text-[10px] font-medium text-rose-300" title="Descendido a 2ª división">
@@ -772,8 +866,8 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Presidente + Recuerdo Maestro + Sticker del mes — 3 cajas */}
-        <section className="grid gap-4 md:grid-cols-3">
+        {/* Presidente + Recuerdo Maestro + Sticker del mes + Entrevista + Cumpleaños — cajas uniformes */}
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {/* Izquierda: Mensaje del Presidente */}
           <MensajePresidenteCard />
 
@@ -782,6 +876,87 @@ export default async function Home() {
 
           {/* Derecha: El sticker del mes — interactivo con pop-up */}
           <StickerDelMesCard />
+
+          {/* Entrevista Maestra — misma lógica de pop-up */}
+          <EntrevistaMaestraCard />
+
+          {/* Nueva caja: El cumpleaños Maestro */}
+          <article className="flex h-full min-h-[420px] flex-col rounded-2xl border border-emerald-700/60 bg-gradient-to-b from-emerald-950/90 via-emerald-950/70 to-zinc-950 p-4 shadow-md shadow-emerald-900/50">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
+                El cumpleaños Maestro
+              </p>
+              {proximoCumple && (
+                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-200">
+                  {proximoCumpleFechaEtiqueta}
+                </span>
+              )}
+            </div>
+
+            <div className="mt-3 flex flex-1 flex-col items-center gap-3">
+              <div className="relative h-44 w-full max-w-[260px] overflow-hidden rounded-xl bg-black/60">
+                <Image
+                  src="/toto.jpg"
+                  alt="Cumpleañero Maestro"
+                  fill
+                  sizes="260px"
+                  className="object-cover"
+                />
+              </div>
+
+              {proximoCumple ? (
+                <div className="w-full space-y-2 text-center">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                      Próximo cumpleañero
+                    </p>
+                    <p className="mt-0.5 text-sm font-semibold text-zinc-50">
+                      {proximoCumple.jugador.nombre}
+                      {proximoCumple.jugador.apodo ? (
+                        <>
+                          {" "}
+                          <span className="font-bold italic text-amber-300">
+                            {proximoCumple.jugador.apodo}
+                          </span>
+                        </>
+                      ) : null}{" "}
+                      <span className="text-zinc-50">
+                        {proximoCumple.jugador.apellido}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="flex items-end justify-between gap-4 text-left">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                        Fecha
+                      </p>
+                      <p className="text-sm font-medium text-zinc-100">
+                        {proximoCumpleFechaEtiqueta}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[11px] uppercase tracking-wide text-emerald-300">
+                        Cuenta regresiva
+                      </p>
+                      <p className="text-2xl font-extrabold tracking-tight text-emerald-200 sm:text-3xl">
+                        {proximoCumple.diasRestantes === 0
+                          ? "¡Hoy!"
+                          : `Quedan ${proximoCumple.diasRestantes} ${
+                              proximoCumple.diasRestantes === 1 ? "día" : "días"
+                            }`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-4 text-sm text-zinc-400 text-center">
+                  Aún no hay fechas de nacimiento registradas para calcular el
+                  próximo cumpleaños.
+                </p>
+              )}
+            </div>
+          </article>
         </section>
 
         {/* Ranking de goleadores y asistencias por equipo (placeholder) */}
@@ -926,9 +1101,9 @@ export default async function Home() {
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    {Array.from({ length: totalTitulos }, (_, i) => (
+                    {titulosOrdenadosParaCopas.map((t) => (
                       <span
-                        key={i}
+                        key={t.id}
                         className="relative inline-flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-zinc-900"
                       >
                         <Image
@@ -936,7 +1111,11 @@ export default async function Home() {
                           alt=""
                           fill
                           sizes="28px"
-                          className="object-contain invert opacity-90"
+                          className={`object-contain ${
+                            esTituloAnual(t)
+                              ? "[filter:invert(1)_sepia(0.7)_saturate(6)_hue-rotate(5deg)]"
+                              : "[filter:invert(1)_sepia(0.2)_saturate(3)_hue-rotate(5deg)_opacity(0.55)]"
+                          }`}
                         />
                       </span>
                     ))}
@@ -953,7 +1132,7 @@ export default async function Home() {
                 Ranking por equipos (estrellas)
               </p>
               <div className="space-y-2 text-sm text-zinc-200">
-                {resumenTitulos.map(({ equipo, cantidad, estrellas }) => (
+                {resumenTitulos.map(({ equipo, cantidad, lista }) => (
                   <div
                     key={equipo}
                     className="flex items-center justify-between rounded-lg bg-zinc-900/80 px-3 py-2"
@@ -965,8 +1144,25 @@ export default async function Home() {
                       <span className="text-xs text-zinc-400">
                         {cantidad} {cantidad === 1 ? "título" : "títulos"}
                       </span>
-                      <span className="text-sm text-amber-300">
-                        {estrellas}
+                      <span className="flex items-center gap-0.5">
+                        {lista.map((t) =>
+                          esTituloAnual(t) ? (
+                            <span
+                              key={t.id}
+                              className="inline-block text-amber-300 scale-110"
+                              title="Campeón anual"
+                            >
+                              ★
+                            </span>
+                          ) : (
+                            <span
+                              key={t.id}
+                              className="text-yellow-500/55"
+                            >
+                              ⭐
+                            </span>
+                          )
+                        )}
                       </span>
                     </div>
                   </div>
@@ -1000,7 +1196,17 @@ export default async function Home() {
                         {equipo}
                       </span>
                       <span className="text-zinc-200">
-                        {t.detalle} {t.anio} <span className="ml-1">⭐️</span>
+                        {t.detalle} {t.anio}{" "}
+                        {esTituloAnual(t) ? (
+                          <span
+                            className="ml-1 inline-block text-amber-300 scale-110"
+                            title="Campeón anual"
+                          >
+                            ★
+                          </span>
+                        ) : (
+                          <span className="ml-1 text-yellow-500/55">⭐</span>
+                        )}
                       </span>
                     </div>
                   </div>

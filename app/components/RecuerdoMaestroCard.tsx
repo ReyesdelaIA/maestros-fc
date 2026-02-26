@@ -27,7 +27,7 @@ export default function RecuerdoMaestroCard() {
 
   return (
     <>
-      <section className="flex flex-col rounded-2xl border border-violet-700/50 bg-gradient-to-b from-violet-950/50 to-zinc-950 p-4 shadow-xl">
+      <section className="flex h-full min-h-[420px] flex-col rounded-2xl border border-violet-700/50 bg-gradient-to-b from-violet-950/50 to-zinc-950 p-4 shadow-xl">
         <div className="mb-2 flex justify-start">
           <span className="inline-flex items-center rounded-full border border-violet-500/60 bg-violet-950/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-300">
             Recuerdo
@@ -39,12 +39,12 @@ export default function RecuerdoMaestroCard() {
           className="group mx-auto w-full max-w-[85%] overflow-hidden rounded-2xl bg-black/40 transition active:scale-[0.98]"
           aria-label="Abrir recuerdo Maestro"
         >
-          <div className="aspect-[4/5] w-full">
+          <div className="relative h-44 w-full">
             <Image
               src="/campeones.png"
               alt="El recuerdo Maestro"
-              width={400}
-              height={500}
+              fill
+              sizes="240px"
               className="h-full w-full object-cover object-center group-hover:opacity-90"
             />
           </div>
