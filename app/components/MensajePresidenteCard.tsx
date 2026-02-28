@@ -187,7 +187,7 @@ export default function MensajePresidenteCard() {
                   <br />
                   <span className="not-italic font-semibold text-zinc-200">Sebastián Benavente</span>
                   <br />
-                  <span className="not-italic text-zinc-200">CEO Maestros FC</span>
+                  <span className="not-italic text-zinc-200">Presidente de Maestros</span>
                 </p>
               </div>
             </div>

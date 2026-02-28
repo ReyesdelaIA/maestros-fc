@@ -1,10 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
+import { getPlayerPhotoSrc } from "../lib/playerPhotos";
 import MensajePresidenteCard from "./components/MensajePresidenteCard";
 import RecuerdoMaestroCard from "./components/RecuerdoMaestroCard";
 import StickerDelMesCard from "./components/StickerDelMesCard";
 import EntrevistaMaestraCard from "./components/EntrevistaMaestraCard";
+import FixtureCard from "./components/FixtureCard";
 
 // Evitar caché: siempre traer datos frescos de Supabase
 export const dynamic = "force-dynamic";
@@ -33,6 +35,13 @@ const RESUMEN_ETIQUETA_ARRIBA: Record<CategoryName, string> = {
   "Senior Fútbol": "Maestros Senior",
   "Super Senior Futbolito": "Maestros SS futbolito",
   "Super Senior Fútbol": "Maestros SS martes",
+};
+
+const CATEGORIA_TO_PLANTEL_SLUG: Record<CategoryName, string> = {
+  "Junior Fútbol": "junior",
+  "Senior Fútbol": "senior",
+  "Super Senior Futbolito": "ss-futbolito",
+  "Super Senior Fútbol": "ss-martes",
 };
 
 // Logo del rival por nombre (archivo en /public)
@@ -386,6 +395,9 @@ export default async function Home() {
   }
 
   const proximoCumple = calcularProximoCumple(jugadoresCumple);
+  const proximoCumpleFoto = proximoCumple
+    ? getPlayerPhotoSrc(proximoCumple.jugador)
+    : null;
   const proximoCumpleFechaEtiqueta =
     proximoCumple?.fecha.toLocaleDateString("es-CL", {
       day: "2-digit",
@@ -495,21 +507,15 @@ export default async function Home() {
                   fecha_partido: null,
                 };
               }
-              const esFutbolitoSuperSenior =
-                categoria === "Super Senior Futbolito";
               const etiquetaArriba = RESUMEN_ETIQUETA_ARRIBA[categoria];
-
-              const BotonPlantilla = esFutbolitoSuperSenior ? (
+              const plantelSlug = CATEGORIA_TO_PLANTEL_SLUG[categoria];
+              const BotonPlantilla = (
                 <Link
-                  href="/equipos/996573f0-857d-42fd-b5f1-ba046439f24a"
+                  href={`/equipos/${plantelSlug}`}
                   className="w-fit rounded-full bg-emerald-500 px-3 py-1 text-[10px] font-semibold text-black shadow-md shadow-emerald-900 transition hover:bg-emerald-400"
                 >
                   Ver plantilla 2026
                 </Link>
-              ) : (
-                <span className="w-fit rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-[10px] font-medium text-zinc-500">
-                  Ver plantilla 2026
-                </span>
               );
 
               if (!ultimo) {
@@ -880,6 +886,9 @@ export default async function Home() {
           {/* Entrevista Maestra — misma lógica de pop-up */}
           <EntrevistaMaestraCard />
 
+          {/* Sexta caja: Fixture + confirmación de asistencia */}
+          <FixtureCard />
+
           {/* Nueva caja: El cumpleaños Maestro */}
           <article className="flex h-full min-h-[420px] flex-col rounded-2xl border border-emerald-700/60 bg-gradient-to-b from-emerald-950/90 via-emerald-950/70 to-zinc-950 p-4 shadow-md shadow-emerald-900/50">
             <div className="flex items-center justify-between gap-2">
@@ -895,13 +904,19 @@ export default async function Home() {
 
             <div className="mt-3 flex flex-1 flex-col items-center gap-3">
               <div className="relative h-44 w-full max-w-[260px] overflow-hidden rounded-xl bg-black/60">
-                <Image
-                  src="/toto.jpg"
-                  alt="Cumpleañero Maestro"
-                  fill
-                  sizes="260px"
-                  className="object-cover"
-                />
+                {proximoCumpleFoto ? (
+                  <Image
+                    src={proximoCumpleFoto}
+                    alt="Cumpleañero Maestro"
+                    fill
+                    sizes="260px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-center text-xs text-zinc-400">
+                    Foto pendiente
+                  </div>
+                )}
               </div>
 
               {proximoCumple ? (
