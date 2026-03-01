@@ -252,6 +252,20 @@ function isMaestrosTeam(name: string | null | undefined) {
   return name.toLowerCase().includes(CLUB_NAME.toLowerCase());
 }
 
+function formatEquipoLabel(name: string | null | undefined) {
+  if (!name) return "";
+  const raw = name.trim();
+  if (raw === "Club Social y Deportivo Argentino SS") return "CSYDA";
+
+  return raw
+    .replace(/\bFutbolito\b/gi, "")
+    .replace(/\(SS\)/gi, "")
+    .replace(/\bSSR\b/g, "")
+    .replace(/\bSS\b/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 function getResultadoEtiqueta(resultado: UltimoResultado) {
   const gf = resultado.goles_maestros ?? 0;
   const gc = resultado.goles_rival ?? 0;
@@ -605,12 +619,9 @@ export default async function Home() {
               const esSSMartes = categoria === "Super Senior Fútbol";
               const esSenior = categoria === "Senior Fútbol";
               const esJunior = categoria === "Junior Fútbol";
-              const usaClausura =
-                esSSFutbolito && tablaClausura2015.length > 0;
-              const tabla = usaClausura
-                ? []
-                : (posicionesPorCategoria[categoria] ?? []).slice(0, 12);
-              const filasClausura = usaClausura ? tablaClausura2015 : [];
+              const usaClausura = false;
+              const tabla = (posicionesPorCategoria[categoria] ?? []).slice(0, 12);
+              const filasClausura = tablaClausura2015;
 
               return (
                 <article
@@ -636,7 +647,9 @@ export default async function Home() {
                           <tbody>
                             {filasClausura.map((row) => {
                               const esMaestros = isMaestrosTeam(row.equipo);
-                              const nombreEquipo = esMaestros ? "Maestros" : `Equipo ${row.posicion}`;
+                              const nombreEquipo = esMaestros
+                                ? "Maestros"
+                                : formatEquipoLabel(row.equipo) || `Equipo ${row.posicion}`;
                               const campeon = row.posicion === 1;
                               return (
                                 <tr
@@ -661,7 +674,7 @@ export default async function Home() {
                             })}
                           </tbody>
                         </table>
-                      ) : esSSFutbolito && tablaClausura2015.length === 0 ? (
+                      ) : false ? (
                         <table className="min-w-full text-left text-xs text-zinc-300">
                           <thead className="sticky top-0 bg-zinc-950">
                             <tr className="border-b border-zinc-800 text-[11px] uppercase tracking-wide text-zinc-500">
@@ -698,7 +711,7 @@ export default async function Home() {
                             })}
                           </tbody>
                         </table>
-                      ) : esSSMartes && tabla.length === 0 ? (
+                      ) : false ? (
                         <table className="min-w-full text-left text-xs text-zinc-300">
                           <thead className="sticky top-0 bg-zinc-950">
                             <tr className="border-b border-zinc-800 text-[11px] uppercase tracking-wide text-zinc-500">
@@ -735,7 +748,7 @@ export default async function Home() {
                             })}
                           </tbody>
                         </table>
-                      ) : esSenior && tabla.length === 0 ? (
+                      ) : false ? (
                         <table className="min-w-full text-left text-xs text-zinc-300">
                           <thead className="sticky top-0 bg-zinc-950">
                             <tr className="border-b border-zinc-800 text-[11px] uppercase tracking-wide text-zinc-500">
@@ -782,7 +795,7 @@ export default async function Home() {
                             })}
                           </tbody>
                         </table>
-                      ) : esJunior && tabla.length === 0 ? (
+                      ) : false ? (
                         <table className="min-w-full text-left text-xs text-zinc-300">
                           <thead className="sticky top-0 bg-zinc-950">
                             <tr className="border-b border-zinc-800 text-[11px] uppercase tracking-wide text-zinc-500">
@@ -830,13 +843,14 @@ export default async function Home() {
                             <tr className="border-b border-zinc-800 text-[11px] uppercase tracking-wide text-zinc-500">
                               <th className="px-2 py-2 font-medium">#</th>
                               <th className="px-2 py-2 font-medium">Equipo</th>
+                              <th className="w-0 px-1 py-2" aria-label="Estado" />
                             </tr>
                           </thead>
                           <tbody>
                             {tabla.length === 0 ? (
                               <tr>
                                 <td
-                                  colSpan={2}
+                                  colSpan={3}
                                   className="px-3 py-3 text-center text-[11px] text-zinc-500"
                                 >
                                   Aún no hay posiciones registradas.
@@ -845,8 +859,18 @@ export default async function Home() {
                             ) : (
                               tabla.map((row, index) => {
                                 const pos = index + 1;
+                                const totalEquipos = tabla.length;
                                 const esMaestros = isMaestrosTeam(row.equipo);
-                                const nombreEquipo = esMaestros ? "Maestros" : `Equipo ${pos}`;
+                                const nombreEquipo = esMaestros
+                                  ? "Maestros"
+                                  : formatEquipoLabel(row.equipo) || `Equipo ${pos}`;
+                                const campeon = pos === 1;
+                                const esSeniorTabla = categoria === "Senior Fútbol";
+                                const esJuniorTabla = categoria === "Junior Fútbol";
+                                const promocion = esSeniorTabla && pos === 10;
+                                const descendido =
+                                  (esSeniorTabla || esJuniorTabla) &&
+                                  pos >= Math.max(1, totalEquipos - 1);
                                 return (
                                   <tr
                                     key={row.id}
@@ -858,6 +882,21 @@ export default async function Home() {
                                   >
                                     <td className="px-2 py-1.5 w-8">{pos}</td>
                                     <td className="px-2 py-1.5 font-medium">{nombreEquipo}</td>
+                                    <td className="px-1 py-1.5 text-right">
+                                      {campeon ? (
+                                        <span className="inline-flex items-center gap-0.5 rounded bg-amber-900/60 px-1.5 py-0.5 text-[10px] font-medium text-amber-300" title="Campeón">
+                                          <span aria-hidden>🏆</span> Campeón
+                                        </span>
+                                      ) : promocion ? (
+                                        <span className="inline-flex items-center gap-0.5 rounded bg-sky-900/50 px-1.5 py-0.5 text-[10px] font-medium text-sky-300" title="Juega promoción">
+                                          <span aria-hidden>↔</span> Promoción
+                                        </span>
+                                      ) : descendido ? (
+                                        <span className="inline-flex items-center gap-0.5 rounded bg-rose-900/60 px-1.5 py-0.5 text-[10px] font-medium text-rose-300" title="Descendido">
+                                          <span aria-hidden>↓</span> Descendido
+                                        </span>
+                                      ) : null}
+                                    </td>
                                   </tr>
                                 );
                               })
