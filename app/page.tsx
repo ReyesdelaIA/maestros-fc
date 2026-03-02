@@ -545,112 +545,22 @@ export default async function Home({
           </div>
         </nav>
 
-        {/* Sección general exclusiva de la pestaña General */}
-        {tab === "general" && (
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {/* 1) Mensaje / palabras del presidente */}
-            <MensajePresidenteCard />
+        <div
+          className={
+            tab === "general"
+              ? "space-y-6 rounded-2xl border border-emerald-700/60 bg-gradient-to-b from-emerald-950/20 via-zinc-950/70 to-zinc-950 p-4 shadow-[0_0_24px_rgba(16,185,129,0.12)] sm:p-5"
+              : "space-y-6"
+          }
+        >
+          {/* En Temas varios, mostrar primero Fixture */}
+          {tab === "general" && (
+            <section className="space-y-3">
+              <FixtureCard />
+            </section>
+          )}
 
-            {/* 2) El cumpleaños Maestro */}
-            <article className="flex h-full min-h-[420px] flex-col rounded-2xl border border-emerald-700/60 bg-gradient-to-b from-emerald-950/90 via-emerald-950/70 to-zinc-950 p-4 shadow-md shadow-emerald-900/50">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
-                El cumpleaños Maestro
-              </p>
-              {proximoCumple && (
-                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-200">
-                  {proximoCumpleFechaEtiqueta}
-                </span>
-              )}
-            </div>
-
-            <div className="mt-3 flex flex-1 flex-col items-center gap-3">
-              <div className="relative h-44 w-full max-w-[260px] overflow-hidden rounded-xl bg-black/60">
-                {proximoCumpleFoto ? (
-                  <Image
-                    src={proximoCumpleFoto}
-                    alt="Cumpleañero Maestro"
-                    fill
-                    sizes="260px"
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-center text-xs text-zinc-400">
-                    Foto pendiente
-                  </div>
-                )}
-              </div>
-
-              {proximoCumple ? (
-                <div className="w-full space-y-2 text-center">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wide text-zinc-500">
-                      Próximo cumpleañero
-                    </p>
-                    <p className="mt-0.5 text-sm font-semibold text-zinc-50">
-                      {proximoCumple.jugador.nombre}
-                      {proximoCumple.jugador.apodo ? (
-                        <>
-                          {" "}
-                          <span className="font-bold italic text-amber-300">
-                            {proximoCumple.jugador.apodo}
-                          </span>
-                        </>
-                      ) : null}{" "}
-                      <span className="text-zinc-50">
-                        {proximoCumple.jugador.apellido}
-                      </span>
-                    </p>
-                  </div>
-
-                  <div className="flex items-end justify-between gap-4 text-left">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-wide text-zinc-500">
-                        Fecha
-                      </p>
-                      <p className="text-sm font-medium text-zinc-100">
-                        {proximoCumpleFechaEtiqueta}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[11px] uppercase tracking-wide text-emerald-300">
-                        Cuenta regresiva
-                      </p>
-                      <p className="text-2xl font-extrabold tracking-tight text-emerald-200 sm:text-3xl">
-                        {proximoCumple.diasRestantes === 0
-                          ? "¡Hoy!"
-                          : `Quedan ${proximoCumple.diasRestantes} ${
-                              proximoCumple.diasRestantes === 1 ? "día" : "días"
-                            }`}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <p className="mt-4 text-sm text-zinc-400 text-center">
-                  Aún no hay fechas de nacimiento registradas para calcular el
-                  próximo cumpleaños.
-                </p>
-              )}
-            </div>
-            </article>
-
-            {/* 3) Fixture + confirmación de asistencia */}
-            <FixtureCard />
-
-            {/* 4) El recuerdo Maestro */}
-            <RecuerdoMaestroCard />
-
-            {/* 5) Entrevista Maestra */}
-            <EntrevistaMaestraCard />
-
-            {/* 6) Sticker del mes */}
-            <StickerDelMesCard />
-          </section>
-        )}
-
-        {/* Resumen del último fin de semana */}
-        <section className="space-y-3">
+          {/* Resumen del último fin de semana */}
+          <section className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold text-zinc-50">
@@ -795,10 +705,10 @@ export default async function Home({
               );
             })}
           </div>
-        </section>
+          </section>
 
-        {/* Tablas de posiciones: mismo ancho que las 4 cajas del resumen */}
-        <section className="space-y-3">
+          {/* Tablas de posiciones: mismo ancho que las 4 cajas del resumen */}
+          <section className="space-y-3">
           <h2 className="text-lg font-semibold text-zinc-50">
             Tablas de posiciones{" "}
             <span className="font-normal italic text-zinc-400">
@@ -1101,11 +1011,11 @@ export default async function Home({
                 );
               })}
           </div>
-        </section>
+          </section>
 
-        {/* Ranking de goleadores y asistencias por equipo (placeholder) */}
-        <section className="space-y-4">
-          <section className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
+          {/* Ranking de goleadores y asistencias por equipo (placeholder) */}
+          <section className="space-y-4">
+            <section className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-semibold text-zinc-50">
                 Ranking de goleadores{" "}
@@ -1214,11 +1124,11 @@ export default async function Home({
                 </article>
               ))}
             </div>
+            </section>
           </section>
-        </section>
 
-        {/* Títulos del club */}
-        <section className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 shadow-lg">
+          {/* Títulos del club */}
+          <section className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 shadow-lg">
           {/* Encabezado principal */}
           <div className="flex items-center justify-between gap-6">
             <div className="flex items-center gap-4">
@@ -1578,7 +1488,111 @@ export default async function Home({
               */}
             </div>
           </div>
-        </section>
+          </section>
+
+          {/* Resto de tarjetas dentro de Temas varios */}
+          {tab === "general" && (
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {/* Mensaje / palabras del presidente */}
+              <MensajePresidenteCard />
+
+              {/* El cumpleaños Maestro */}
+              <article className="flex h-full min-h-[420px] flex-col rounded-2xl border border-emerald-700/60 bg-gradient-to-b from-emerald-950/90 via-emerald-950/70 to-zinc-950 p-4 shadow-md shadow-emerald-900/50">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
+                    El cumpleaños Maestro
+                  </p>
+                  {proximoCumple && (
+                    <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-200">
+                      {proximoCumpleFechaEtiqueta}
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-3 flex flex-1 flex-col items-center gap-3">
+                  <div className="relative h-44 w-full max-w-[260px] overflow-hidden rounded-xl bg-black/60">
+                    {proximoCumpleFoto ? (
+                      <Image
+                        src={proximoCumpleFoto}
+                        alt="Cumpleañero Maestro"
+                        fill
+                        sizes="260px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-center text-xs text-zinc-400">
+                        Foto pendiente
+                      </div>
+                    )}
+                  </div>
+
+                  {proximoCumple ? (
+                    <div className="w-full space-y-2 text-center">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                          Próximo cumpleañero
+                        </p>
+                        <p className="mt-0.5 text-sm font-semibold text-zinc-50">
+                          {proximoCumple.jugador.nombre}
+                          {proximoCumple.jugador.apodo ? (
+                            <>
+                              {" "}
+                              <span className="font-bold italic text-amber-300">
+                                {proximoCumple.jugador.apodo}
+                              </span>
+                            </>
+                          ) : null}{" "}
+                          <span className="text-zinc-50">
+                            {proximoCumple.jugador.apellido}
+                          </span>
+                        </p>
+                      </div>
+
+                      <div className="flex items-end justify-between gap-4 text-left">
+                        <div>
+                          <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                            Fecha
+                          </p>
+                          <p className="text-sm font-medium text-zinc-100">
+                            {proximoCumpleFechaEtiqueta}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[11px] uppercase tracking-wide text-emerald-300">
+                            Cuenta regresiva
+                          </p>
+                          <p className="text-2xl font-extrabold tracking-tight text-emerald-200 sm:text-3xl">
+                            {proximoCumple.diasRestantes === 0
+                              ? "¡Hoy!"
+                              : `Quedan ${proximoCumple.diasRestantes} ${
+                                  proximoCumple.diasRestantes === 1
+                                    ? "día"
+                                    : "días"
+                                }`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-sm text-zinc-400 text-center">
+                      Aún no hay fechas de nacimiento registradas para calcular el
+                      próximo cumpleaños.
+                    </p>
+                  )}
+                </div>
+              </article>
+
+              {/* El recuerdo Maestro */}
+              <RecuerdoMaestroCard />
+
+              {/* Entrevista Maestra */}
+              <EntrevistaMaestraCard />
+
+              {/* Sticker del mes */}
+              <StickerDelMesCard />
+            </section>
+          )}
+        </div>
       </main>
     </div>
   );

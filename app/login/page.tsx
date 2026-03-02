@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextParam = searchParams?.get("next") ?? "/";
@@ -145,5 +145,26 @@ export default function LoginPage() {
         </Link>
       </main>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-black text-zinc-50">
+          <main
+            className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-4 pb-10"
+            style={{ paddingTop: "max(env(safe-area-inset-top), 2.75rem)" }}
+          >
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 shadow-xl">
+              <p className="text-sm text-zinc-400">Cargando acceso...</p>
+            </section>
+          </main>
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }
