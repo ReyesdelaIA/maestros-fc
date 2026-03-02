@@ -57,10 +57,21 @@ export default async function JugadorPage({ params }: PageProps) {
   if (!jugador) {
     return (
       <div className="min-h-screen bg-black text-zinc-50">
-        <main className="mx-auto max-w-xl px-4 py-8">
-          <Link href="/" className="text-sm text-emerald-300 hover:text-emerald-200">
-            ← Volver al dashboard
-          </Link>
+        <main
+          className="mx-auto max-w-xl px-4 pb-8"
+          style={{ paddingTop: "max(env(safe-area-inset-top), 2.75rem)" }}
+        >
+          <div className="-mx-4 border-b border-zinc-800/80 bg-black/95 px-4 pb-2 pt-2 backdrop-blur">
+            <Link
+              href="/"
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-emerald-500/70 bg-emerald-500/10 px-4 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/20"
+            >
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-base leading-none">
+                ←
+              </span>
+              <span>Volver al dashboard</span>
+            </Link>
+          </div>
           <p className="mt-6 text-sm text-zinc-400">Jugador no encontrado.</p>
         </main>
       </div>
@@ -69,14 +80,22 @@ export default async function JugadorPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-black text-zinc-50">
-      <main className="mx-auto max-w-xl px-4 py-8">
-        <Link
-          href={backSlug ? `/equipos/${backSlug}` : "/"}
-          className="text-sm text-emerald-300 hover:text-emerald-200"
-        >
-          ← Volver
-        </Link>
-
+      <main
+        className="mx-auto max-w-xl px-4 pb-8"
+        style={{ paddingTop: "max(env(safe-area-inset-top), 2.75rem)" }}
+      >
+        <div className="-mx-4 border-b border-zinc-800/80 bg-black/95 px-4 pb-2 pt-2 backdrop-blur">
+          <Link
+            href={backSlug ? `/equipos/${backSlug}` : "/"}
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-emerald-500/70 bg-emerald-500/10 px-4 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/20"
+            aria-label="Volver"
+          >
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-base leading-none">
+              ←
+            </span>
+            <span>Volver</span>
+          </Link>
+        </div>
         <section className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4">
           <div className="relative mx-auto h-44 w-44 overflow-hidden rounded-2xl bg-zinc-900">
             {fotoSrc ? (

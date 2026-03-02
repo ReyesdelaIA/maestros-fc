@@ -32,10 +32,10 @@ const PLANTEL_POR_SLUG: Record<string, string> = {
 };
 
 const LABEL_PLANTEL: Record<string, string> = {
-  "Junior Fútbol": "Maestros Junior",
-  "Senior Fútbol": "Maestros Senior",
-  "Super Senior Futbolito": "Maestros SS futbolito",
-  "Super Senior Fútbol": "Maestros SS martes",
+  "Junior Fútbol": "Junior",
+  "Senior Fútbol": "Senior",
+  "Super Senior Futbolito": "Super Senior futbolito",
+  "Super Senior Fútbol": "Super Senior fútbol",
 };
 
 /** Parsea fecha YYYY-MM-DD como fecha local (evita desfase de 1 día por timezone) */
@@ -262,18 +262,24 @@ export default async function EquipoPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-black text-zinc-50">
-      <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 px-4 pb-10 pt-6">
-        <header className="border-b border-zinc-800 pb-4">
-          <div className="mb-2">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-300 hover:text-emerald-200"
-            >
-              <span aria-hidden>←</span>
-              <span>Volver al dashboard</span>
-            </Link>
-          </div>
+      <main
+        className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 px-4 pb-10"
+        style={{ paddingTop: "max(env(safe-area-inset-top), 2.75rem)" }}
+      >
+        <div className="sticky top-0 z-30 -mx-4 border-b border-zinc-800/80 bg-black/95 px-4 pb-2 pt-2 backdrop-blur">
+          <Link
+            href="/"
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-emerald-500/70 bg-emerald-500/10 px-4 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/20"
+            aria-label="Volver al dashboard"
+          >
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-base leading-none">
+              ←
+            </span>
+            <span>Volver al dashboard</span>
+          </Link>
+        </div>
 
+        <header className="border-b border-zinc-800 pb-4">
           <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-emerald-400">
@@ -283,7 +289,7 @@ export default async function EquipoPage({ params }: PageProps) {
               {tituloEquipo}
             </h1>
             <p className="mt-1 text-xs text-zinc-400">
-              Lista de jugadores con edad, dorsales, goles y asistencias.
+              Lista de jugadores con edad y dorsal.
             </p>
           </div>
           </div>
@@ -327,15 +333,14 @@ export default async function EquipoPage({ params }: PageProps) {
               </div>
             </section>
 
-            {/* Encabezado: posición, jugador, dorsal, edad, nac., goles/asistencias */}
+            {/* Encabezado: posición, jugador, dorsal, edad, nac. */}
             <div className="mt-3 mb-1 flex items-center gap-2 px-2 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-              <span className="w-16 text-left">Posición</span>
-              <span className="w-7" />
+              <span className="w-14 text-left">Posición</span>
+              <span className="w-6" />
               <span className="min-w-0 flex-1">Jugador</span>
               <span className="w-12 text-center">Dorsal</span>
-              <span className="w-9 text-right">Edad</span>
+              <span className="hidden w-9 text-right sm:block">Edad</span>
               <span className="hidden w-16 text-right sm:block">Nac.</span>
-              <span className="w-14 text-right">G / A</span>
             </div>
 
             <ul className="divide-y divide-zinc-800/80 rounded-2xl border border-zinc-800 bg-zinc-950/70">
@@ -357,7 +362,7 @@ export default async function EquipoPage({ params }: PageProps) {
                     className="flex items-center gap-2 px-2 py-1.5 text-[12px]"
                   >
                     <div
-                      className="flex h-7 w-16 flex-shrink-0 items-center justify-start gap-1 rounded text-[10px]"
+                      className="flex h-7 w-14 flex-shrink-0 items-center justify-start gap-1 rounded text-[10px]"
                       title={
                         posicionPrincipal === "POR"
                           ? "Portero"
@@ -391,21 +396,21 @@ export default async function EquipoPage({ params }: PageProps) {
                       )}
                     </div>
 
-                    <div className="relative h-7 w-7 flex-shrink-0 overflow-hidden rounded-full bg-zinc-900">
+                    <div className="relative h-6 w-6 flex-shrink-0 overflow-hidden rounded-full bg-zinc-900">
                       <Image
                         src="/logo_maestros.png"
                         alt=""
                         fill
-                        sizes="28px"
+                        sizes="24px"
                         className="object-contain opacity-80"
                       />
                     </div>
 
                     <Link
                       href={`/jugadores/${jugador.id}`}
-                      className="min-w-0 flex-1 truncate rounded px-1 py-0.5 hover:bg-zinc-900/70"
+                      className="min-w-0 flex-1 rounded px-1 py-0.5 hover:bg-zinc-900/70"
                     >
-                      <span className="font-medium text-zinc-50">
+                      <span className="text-[13px] font-medium text-zinc-50">
                         {jugador.nombre}
                       </span>
                       {jugador.apodo && (
@@ -432,7 +437,7 @@ export default async function EquipoPage({ params }: PageProps) {
                       )}
                     </div>
 
-                    <span className="w-9 flex-shrink-0 text-right text-[11px] text-zinc-400">
+                    <span className="hidden w-9 flex-shrink-0 text-right text-[11px] text-zinc-400 sm:block">
                       {edad !== null ? `${edad}` : "—"}
                     </span>
 
@@ -441,27 +446,6 @@ export default async function EquipoPage({ params }: PageProps) {
                         ? formatearFechaCumple(jugador.fecha_nacimiento)
                         : "—"}
                     </span>
-
-                    <div className="flex w-14 flex-shrink-0 items-center justify-end gap-1">
-                      <span
-                        className="inline-flex items-center gap-0.5 rounded bg-zinc-900 px-1 py-0.5 text-[10px]"
-                        title="Goles"
-                      >
-                        <span className="h-1 w-1 rounded-full bg-emerald-400" />
-                        <span className="font-medium text-zinc-300">
-                          {jugador.goles ?? 0}
-                        </span>
-                      </span>
-                      <span
-                        className="inline-flex items-center gap-0.5 rounded bg-zinc-900 px-1 py-0.5 text-[10px]"
-                        title="Asistencias"
-                      >
-                        <span className="h-1 w-1 rounded-full bg-sky-400" />
-                        <span className="font-medium text-zinc-300">
-                          {jugador.asistencias ?? 0}
-                        </span>
-                      </span>
-                    </div>
 
                     {cumpleHoy && (
                       <span

@@ -38,10 +38,10 @@ type Jugador = {
 type AsistenciaEstado = "disponible" | "en_duda" | "no_disponible";
 
 const CATEGORIAS: Array<{ value: Categoria; label: string }> = [
-  { value: "Junior Fútbol", label: "Maestros Junior" },
-  { value: "Senior Fútbol", label: "Maestros Senior" },
-  { value: "Super Senior Futbolito", label: "Maestros SS futbolito" },
-  { value: "Super Senior Fútbol", label: "Maestros SS martes" },
+  { value: "Junior Fútbol", label: "Junior" },
+  { value: "Senior Fútbol", label: "Senior" },
+  { value: "Super Senior Futbolito", label: "Super Senior futbolito" },
+  { value: "Super Senior Fútbol", label: "Super Senior fútbol" },
 ];
 
 function isWeekend(fechaISO: string): boolean {

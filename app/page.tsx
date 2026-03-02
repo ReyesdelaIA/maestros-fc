@@ -7,6 +7,8 @@ import RecuerdoMaestroCard from "./components/RecuerdoMaestroCard";
 import StickerDelMesCard from "./components/StickerDelMesCard";
 import EntrevistaMaestraCard from "./components/EntrevistaMaestraCard";
 import FixtureCard from "./components/FixtureCard";
+import UserGreeting from "./components/UserGreeting";
+import HeaderAuthActions from "./components/HeaderAuthActions";
 
 // Evitar caché: siempre traer datos frescos de Supabase
 export const dynamic = "force-dynamic";
@@ -23,18 +25,18 @@ const CATEGORIES = [
 type CategoryName = (typeof CATEGORIES)[number];
 
 const CATEGORY_LABELS: Record<CategoryName, string> = {
-  "Junior Fútbol": "Maestros Junior",
-  "Senior Fútbol": "Maestros Senior",
-  "Super Senior Futbolito": "Maestros SS futbolito",
-  "Super Senior Fútbol": "Maestros SS martes",
+  "Junior Fútbol": "Junior",
+  "Senior Fútbol": "Senior",
+  "Super Senior Futbolito": "Super Senior futbolito",
+  "Super Senior Fútbol": "Super Senior fútbol",
 };
 
 // Etiqueta que va arriba de cada caja del resumen
 const RESUMEN_ETIQUETA_ARRIBA: Record<CategoryName, string> = {
-  "Junior Fútbol": "Maestros Junior",
-  "Senior Fútbol": "Maestros Senior",
-  "Super Senior Futbolito": "Maestros SS futbolito",
-  "Super Senior Fútbol": "Maestros SS martes",
+  "Junior Fútbol": "Junior",
+  "Senior Fútbol": "Senior",
+  "Super Senior Futbolito": "Super Senior futbolito",
+  "Super Senior Fútbol": "Super Senior fútbol",
 };
 
 const CATEGORIA_TO_PLANTEL_SLUG: Record<CategoryName, string> = {
@@ -124,6 +126,13 @@ type Titulo = {
   anio: number;
   detalle: string;
 };
+
+type TabSlug =
+  | "general"
+  | "junior"
+  | "senior"
+  | "super-senior-futbolito"
+  | "super-senior-futbol";
 
 /** Parsea fecha YYYY-MM-DD como fecha local (evita desfase de 1 día por timezone) */
 function parseFechaLocal(fechaStr: string | null): Date | null {
@@ -301,7 +310,21 @@ function formatDate(value: string | null | undefined) {
   });
 }
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = (await searchParams) ?? {};
+  const tabParamRaw = params.tab;
+  const tabParam = Array.isArray(tabParamRaw) ? tabParamRaw[0] : tabParamRaw;
+  const tab: TabSlug =
+    tabParam === "junior" ||
+    tabParam === "senior" ||
+    tabParam === "super-senior-futbolito" ||
+    tabParam === "super-senior-futbol"
+      ? tabParam
+      : "general";
   const {
     ultimosResultados,
     posiciones,
@@ -418,44 +441,213 @@ export default async function Home() {
       month: "short",
     }) ?? "";
 
+  const categoryByTab: Record<Exclude<TabSlug, "general">, CategoryName> = {
+    junior: "Junior Fútbol",
+    senior: "Senior Fútbol",
+    "super-senior-futbolito": "Super Senior Futbolito",
+    "super-senior-futbol": "Super Senior Fútbol",
+  };
+  const categoriasVisibles: CategoryName[] =
+    tab === "general" ? [...CATEGORIES] : [categoryByTab[tab]];
+  const tabsConfig: Array<{ slug: TabSlug; label: string }> = [
+    { slug: "general", label: "Temas varios" },
+    { slug: "junior", label: "Junior" },
+    { slug: "senior", label: "Senior" },
+    { slug: "super-senior-futbolito", label: "Super Senior futbolito" },
+    { slug: "super-senior-futbol", label: "Super Senior fútbol" },
+  ];
+  const generalTab = tabsConfig[0];
+  const categoryTabs = tabsConfig.slice(1);
+
   return (
     <div className="min-h-screen bg-black text-zinc-50">
-      <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-10">
+      <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-4 pb-10 pt-0 sm:px-6 lg:px-8 lg:pt-0">
         {/* Header */}
-        <header className="flex flex-col gap-4 border-b border-emerald-700/40 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <header
+          className="-mx-4 flex flex-col gap-4 border-b border-emerald-500/40 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.30),rgba(2,6,23,0.9)_65%)] px-4 pb-6 shadow-[0_0_34px_rgba(16,185,129,0.18)] sm:-mx-6 sm:flex-row sm:items-end sm:justify-between sm:px-6 lg:-mx-8 lg:px-8"
+          style={{ paddingTop: "max(env(safe-area-inset-top), 3.5rem)" }}
+        >
           <div className="flex items-center gap-4">
-            <div className="relative h-20 w-20 overflow-hidden rounded-full border border-emerald-500/70 bg-black shadow-md shadow-emerald-900/70 sm:h-24 sm:w-24">
-              <Image
-                src="/logo_maestros.png"
-                alt="Escudo Maestros FC"
-                fill
-                sizes="96px"
-                className="object-contain p-1.5"
-                priority
-              />
-            </div>
-            <div>
+            <Image
+              src="/logo_maestros.png"
+              alt="Escudo Maestros FC"
+              width={104}
+              height={104}
+              sizes="104px"
+              className="h-[92px] w-[92px] object-contain sm:h-[104px] sm:w-[104px]"
+              priority
+            />
+            <div className="pt-1 sm:pt-2">
               <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-400">
                 Club de Fútbol
               </p>
               <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-50 sm:text-4xl">
                 Maestros FC
               </h1>
-              <p className="mt-1 text-sm text-zinc-400 sm:text-base">
-                Dashboard de rendimiento • Resultados, tabla y próxima fecha.
-              </p>
             </div>
           </div>
 
-          <div className="flex justify-end sm:items-end">
-            <Link
-              href="/admin"
-              className="inline-flex items-center rounded-full border border-emerald-500/70 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-300 hover:bg-emerald-500/20"
-            >
-              Registrar resultado
-            </Link>
+          <div className="flex w-full items-center justify-end gap-2 sm:w-auto sm:justify-end">
+            <HeaderAuthActions />
           </div>
         </header>
+
+        <UserGreeting />
+
+        {/* Navegación superior por pestañas */}
+        <nav
+          className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-2"
+          aria-label="Secciones"
+        >
+          <Link
+            href="/"
+            aria-label="Temas varios"
+            className={`mb-2 inline-flex h-24 w-full items-center justify-center rounded-xl border px-3 text-center text-sm font-extrabold tracking-wide text-white transition-transform duration-200 ${
+              tab === generalTab.slug
+                ? "border-emerald-300 shadow-[0_0_28px_rgba(16,185,129,0.95),0_0_52px_rgba(16,185,129,0.6),inset_0_0_16px_rgba(16,185,129,0.38)] hover:-translate-y-0.5"
+                : "border-emerald-400/90 shadow-[0_0_18px_rgba(16,185,129,0.6)] opacity-100 hover:-translate-y-0.5 hover:shadow-[0_0_26px_rgba(16,185,129,0.8)]"
+            }`}
+            style={{
+              backgroundImage:
+                "linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.22)), url('/temas-varios-banner.png')",
+              backgroundSize: "contain",
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "center",
+            }}
+          >
+            <span className="sr-only">{generalTab.label}</span>
+          </Link>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {categoryTabs.map((t) => {
+              const active = tab === t.slug;
+              return (
+                <Link
+                  key={t.slug}
+                  href={t.slug === "general" ? "/" : `/?tab=${t.slug}`}
+                  className={`inline-flex h-14 min-w-0 items-center justify-start gap-1.5 rounded-xl px-2 text-left text-[11px] font-semibold leading-tight whitespace-normal break-words transition sm:px-3 sm:text-xs ${
+                    active
+                      ? "bg-cyan-500 text-black shadow-[0_0_10px_rgba(34,211,238,0.45)]"
+                      : "bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                  }`}
+                >
+                  <Image
+                    src="/logo_maestros.png"
+                    alt=""
+                    width={18}
+                    height={18}
+                    className="h-[18px] w-[18px] flex-shrink-0 rounded-full object-cover"
+                    aria-hidden
+                  />
+                  {t.label}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* Sección general exclusiva de la pestaña General */}
+        {tab === "general" && (
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {/* 1) Mensaje / palabras del presidente */}
+            <MensajePresidenteCard />
+
+            {/* 2) El cumpleaños Maestro */}
+            <article className="flex h-full min-h-[420px] flex-col rounded-2xl border border-emerald-700/60 bg-gradient-to-b from-emerald-950/90 via-emerald-950/70 to-zinc-950 p-4 shadow-md shadow-emerald-900/50">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
+                El cumpleaños Maestro
+              </p>
+              {proximoCumple && (
+                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-200">
+                  {proximoCumpleFechaEtiqueta}
+                </span>
+              )}
+            </div>
+
+            <div className="mt-3 flex flex-1 flex-col items-center gap-3">
+              <div className="relative h-44 w-full max-w-[260px] overflow-hidden rounded-xl bg-black/60">
+                {proximoCumpleFoto ? (
+                  <Image
+                    src={proximoCumpleFoto}
+                    alt="Cumpleañero Maestro"
+                    fill
+                    sizes="260px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-center text-xs text-zinc-400">
+                    Foto pendiente
+                  </div>
+                )}
+              </div>
+
+              {proximoCumple ? (
+                <div className="w-full space-y-2 text-center">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                      Próximo cumpleañero
+                    </p>
+                    <p className="mt-0.5 text-sm font-semibold text-zinc-50">
+                      {proximoCumple.jugador.nombre}
+                      {proximoCumple.jugador.apodo ? (
+                        <>
+                          {" "}
+                          <span className="font-bold italic text-amber-300">
+                            {proximoCumple.jugador.apodo}
+                          </span>
+                        </>
+                      ) : null}{" "}
+                      <span className="text-zinc-50">
+                        {proximoCumple.jugador.apellido}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="flex items-end justify-between gap-4 text-left">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                        Fecha
+                      </p>
+                      <p className="text-sm font-medium text-zinc-100">
+                        {proximoCumpleFechaEtiqueta}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[11px] uppercase tracking-wide text-emerald-300">
+                        Cuenta regresiva
+                      </p>
+                      <p className="text-2xl font-extrabold tracking-tight text-emerald-200 sm:text-3xl">
+                        {proximoCumple.diasRestantes === 0
+                          ? "¡Hoy!"
+                          : `Quedan ${proximoCumple.diasRestantes} ${
+                              proximoCumple.diasRestantes === 1 ? "día" : "días"
+                            }`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-4 text-sm text-zinc-400 text-center">
+                  Aún no hay fechas de nacimiento registradas para calcular el
+                  próximo cumpleaños.
+                </p>
+              )}
+            </div>
+            </article>
+
+            {/* 3) Fixture + confirmación de asistencia */}
+            <FixtureCard />
+
+            {/* 4) El recuerdo Maestro */}
+            <RecuerdoMaestroCard />
+
+            {/* 5) Entrevista Maestra */}
+            <EntrevistaMaestraCard />
+
+            {/* 6) Sticker del mes */}
+            <StickerDelMesCard />
+          </section>
+        )}
 
         {/* Resumen del último fin de semana */}
         <section className="space-y-3">
@@ -474,7 +666,7 @@ export default async function Home() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {CATEGORIES.map((categoria) => {
+            {categoriasVisibles.map((categoria) => {
               const lista = resultadosPorCategoria[categoria] ?? [];
               let ultimo: UltimoResultado | undefined = lista[0];
               // Placeholder para Maestros FC futbolito: último partido 2-4 vs La Gloria (derrota)
@@ -614,7 +806,7 @@ export default async function Home() {
             </span>
           </h2>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {CATEGORIES.map((categoria) => {
+            {categoriasVisibles.map((categoria) => {
               const esSSFutbolito = categoria === "Super Senior Futbolito";
               const esSSMartes = categoria === "Super Senior Fútbol";
               const esSenior = categoria === "Senior Fútbol";
@@ -911,108 +1103,6 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Presidente + Recuerdo Maestro + Sticker del mes + Entrevista + Cumpleaños — cajas uniformes */}
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {/* Izquierda: Mensaje del Presidente */}
-          <MensajePresidenteCard />
-
-          {/* Centro: El recuerdo Maestro — interactivo con pop-up */}
-          <RecuerdoMaestroCard />
-
-          {/* Derecha: El sticker del mes — interactivo con pop-up */}
-          <StickerDelMesCard />
-
-          {/* Entrevista Maestra — misma lógica de pop-up */}
-          <EntrevistaMaestraCard />
-
-          {/* Sexta caja: Fixture + confirmación de asistencia */}
-          <FixtureCard />
-
-          {/* Nueva caja: El cumpleaños Maestro */}
-          <article className="flex h-full min-h-[420px] flex-col rounded-2xl border border-emerald-700/60 bg-gradient-to-b from-emerald-950/90 via-emerald-950/70 to-zinc-950 p-4 shadow-md shadow-emerald-900/50">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
-                El cumpleaños Maestro
-              </p>
-              {proximoCumple && (
-                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-200">
-                  {proximoCumpleFechaEtiqueta}
-                </span>
-              )}
-            </div>
-
-            <div className="mt-3 flex flex-1 flex-col items-center gap-3">
-              <div className="relative h-44 w-full max-w-[260px] overflow-hidden rounded-xl bg-black/60">
-                {proximoCumpleFoto ? (
-                  <Image
-                    src={proximoCumpleFoto}
-                    alt="Cumpleañero Maestro"
-                    fill
-                    sizes="260px"
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-center text-xs text-zinc-400">
-                    Foto pendiente
-                  </div>
-                )}
-              </div>
-
-              {proximoCumple ? (
-                <div className="w-full space-y-2 text-center">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wide text-zinc-500">
-                      Próximo cumpleañero
-                    </p>
-                    <p className="mt-0.5 text-sm font-semibold text-zinc-50">
-                      {proximoCumple.jugador.nombre}
-                      {proximoCumple.jugador.apodo ? (
-                        <>
-                          {" "}
-                          <span className="font-bold italic text-amber-300">
-                            {proximoCumple.jugador.apodo}
-                          </span>
-                        </>
-                      ) : null}{" "}
-                      <span className="text-zinc-50">
-                        {proximoCumple.jugador.apellido}
-                      </span>
-                    </p>
-                  </div>
-
-                  <div className="flex items-end justify-between gap-4 text-left">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-wide text-zinc-500">
-                        Fecha
-                      </p>
-                      <p className="text-sm font-medium text-zinc-100">
-                        {proximoCumpleFechaEtiqueta}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[11px] uppercase tracking-wide text-emerald-300">
-                        Cuenta regresiva
-                      </p>
-                      <p className="text-2xl font-extrabold tracking-tight text-emerald-200 sm:text-3xl">
-                        {proximoCumple.diasRestantes === 0
-                          ? "¡Hoy!"
-                          : `Quedan ${proximoCumple.diasRestantes} ${
-                              proximoCumple.diasRestantes === 1 ? "día" : "días"
-                            }`}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <p className="mt-4 text-sm text-zinc-400 text-center">
-                  Aún no hay fechas de nacimiento registradas para calcular el
-                  próximo cumpleaños.
-                </p>
-              )}
-            </div>
-          </article>
-        </section>
-
         {/* Ranking de goleadores y asistencias por equipo (placeholder) */}
         <section className="space-y-4">
           <section className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
@@ -1029,7 +1119,7 @@ export default async function Home() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {CATEGORIES.map((categoria) => (
+              {categoriasVisibles.map((categoria) => (
                 <article
                   key={categoria}
                   className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/80"

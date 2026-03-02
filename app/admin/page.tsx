@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import { isAdminEmail } from "../../lib/authRoles";
 
 const CATEGORIAS = [
   "Maestros Junior",
@@ -16,6 +17,8 @@ type CategoriaAdmin = (typeof CATEGORIAS)[number];
 
 export default function AdminPage() {
   const router = useRouter();
+  const [authChecking, setAuthChecking] = useState(true);
+  const [allowAdmin, setAllowAdmin] = useState(false);
   const [categoria, setCategoria] = useState<CategoriaAdmin>("Maestros SS Futbolito");
   const [rival, setRival] = useState("");
   const [golesMaestros, setGolesMaestros] = useState("0");
@@ -29,6 +32,62 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const check = async () => {
+      const { data } = await supabase.auth.getSession();
+      const email = data.session?.user?.email ?? null;
+      if (!mounted) return;
+      setAllowAdmin(isAdminEmail(email));
+      setAuthChecking(false);
+    };
+    void check();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAllowAdmin(isAdminEmail(session?.user?.email ?? null));
+      setAuthChecking(false);
+    });
+
+    return () => {
+      mounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-black text-zinc-50">
+        <main className="mx-auto flex min-h-screen max-w-md items-center justify-center px-4">
+          <p className="text-sm text-zinc-300">Verificando permisos...</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (!allowAdmin) {
+    return (
+      <div className="min-h-screen bg-black text-zinc-50">
+        <main
+          className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-3 px-4 text-center"
+          style={{ paddingTop: "max(env(safe-area-inset-top), 2.75rem)" }}
+        >
+          <p className="text-sm text-zinc-300">
+            Esta sección es solo para administradores.
+          </p>
+          <Link
+            href="/login?next=%2Fadmin"
+            className="inline-flex items-center rounded-full border border-sky-500/70 bg-sky-500/20 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-sky-200 hover:bg-sky-500/30"
+          >
+            Iniciar sesión con cuenta admin
+          </Link>
+          <Link href="/" className="text-xs text-zinc-500 underline">
+            Volver al inicio
+          </Link>
+        </main>
+      </div>
+    );
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -76,7 +135,10 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-black text-zinc-50">
-      <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 px-4 pb-10 pt-6">
+      <main
+        className="mx-auto flex min-h-screen max-w-md flex-col gap-4 px-4 pb-10"
+        style={{ paddingTop: "max(env(safe-area-inset-top), 2.75rem)" }}
+      >
         <header className="flex items-center justify-between gap-3 border-b border-zinc-800 pb-3">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-emerald-400">

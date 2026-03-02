@@ -17,11 +17,14 @@ declare global {
 }
 
 let client: SupabaseClient;
+const isBrowser = typeof window !== "undefined";
 
 if (typeof globalThis.supabaseClient === "undefined") {
   client = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-      persistSession: false,
+      persistSession: isBrowser,
+      autoRefreshToken: isBrowser,
+      detectSessionInUrl: isBrowser,
     },
   });
   globalThis.supabaseClient = client;
