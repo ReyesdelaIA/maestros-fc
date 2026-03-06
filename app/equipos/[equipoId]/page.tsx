@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
+import { getCategoriaLabel } from "../../../lib/categoryLabels";
 
 type PageProps = {
   params: Promise<{
@@ -31,12 +32,6 @@ const PLANTEL_POR_SLUG: Record<string, string> = {
   "996573f0-857d-42fd-b5f1-ba046439f24a": "Super Senior Futbolito",
 };
 
-const LABEL_PLANTEL: Record<string, string> = {
-  "Junior Fútbol": "Junior",
-  "Senior Fútbol": "Senior",
-  "Super Senior Futbolito": "Super Senior futbolito",
-  "Super Senior Fútbol": "Super Senior fútbol",
-};
 
 /** Parsea fecha YYYY-MM-DD como fecha local (evita desfase de 1 día por timezone) */
 function parseFechaLocal(fechaStr: string | null): Date | null {
@@ -243,7 +238,7 @@ export default async function EquipoPage({ params }: PageProps) {
 
   const { jugadores, categoriaFiltro } = await getJugadoresConStats(equipoId);
   const tituloEquipo = categoriaFiltro
-    ? LABEL_PLANTEL[categoriaFiltro] ?? categoriaFiltro
+    ? getCategoriaLabel(categoriaFiltro) || categoriaFiltro
     : `Equipo #${equipoId}`;
 
   const resumenPlantel = jugadores.reduce(

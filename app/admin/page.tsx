@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { isAdminEmail } from "../../lib/authRoles";
+import { EQUIPO_TITULOS_LABELS } from "../../lib/categoryLabels";
 
 const CATEGORIAS = [
   "Maestros Junior",
@@ -173,7 +174,7 @@ export default function AdminPage() {
             >
               {CATEGORIAS.map((cat) => (
                 <option key={cat} value={cat}>
-                  {cat}
+                  {EQUIPO_TITULOS_LABELS[cat] ?? cat}
                 </option>
               ))}
             </select>

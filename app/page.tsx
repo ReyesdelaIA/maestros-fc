@@ -9,6 +9,9 @@ import EntrevistaMaestraCard from "./components/EntrevistaMaestraCard";
 import FixtureCard from "./components/FixtureCard";
 import UserGreeting from "./components/UserGreeting";
 import HeaderAuthActions from "./components/HeaderAuthActions";
+import BottomNav from "./components/BottomNav";
+import TitulosDetalleExpandable from "./components/TitulosDetalleExpandable";
+import { getEquipoTitulosLabel } from "../lib/categoryLabels";
 
 // Evitar caché: siempre traer datos frescos de Supabase
 export const dynamic = "force-dynamic";
@@ -27,16 +30,16 @@ type CategoryName = (typeof CATEGORIES)[number];
 const CATEGORY_LABELS: Record<CategoryName, string> = {
   "Junior Fútbol": "Junior",
   "Senior Fútbol": "Senior",
-  "Super Senior Futbolito": "Super Senior futbolito",
-  "Super Senior Fútbol": "Super Senior fútbol",
+  "Super Senior Futbolito": "SS Futbolito",
+  "Super Senior Fútbol": "SS Fútbol",
 };
 
 // Etiqueta que va arriba de cada caja del resumen
 const RESUMEN_ETIQUETA_ARRIBA: Record<CategoryName, string> = {
   "Junior Fútbol": "Junior",
   "Senior Fútbol": "Senior",
-  "Super Senior Futbolito": "Super Senior futbolito",
-  "Super Senior Fútbol": "Super Senior fútbol",
+  "Super Senior Futbolito": "SS Futbolito",
+  "Super Senior Fútbol": "SS Fútbol",
 };
 
 const CATEGORIA_TO_PLANTEL_SLUG: Record<CategoryName, string> = {
@@ -72,6 +75,9 @@ type Posicion = {
   categoria: CategoryName | string | null;
   equipo: string;
   pj?: number | null;
+  pg?: number | null;
+  pe?: number | null;
+  pp?: number | null;
   pts?: number | null;
   gf?: number | null;
   gc?: number | null;
@@ -80,12 +86,13 @@ type Posicion = {
 };
 
 type ProximoPartido = {
-  id: number;
+  id: string | number;
   categoria: CategoryName | string | null;
   rival: string | null;
   fecha_partido: string | null;
   hora?: string | null;
   cancha?: string | null;
+  estado?: string | null;
   [key: string]: unknown;
 };
 
@@ -214,7 +221,29 @@ async function getDashboardData() {
       .from("tabla_clausura_2015")
       .select("*")
       .order("posicion", { ascending: true }),
-    supabase.from("partidos").select("*").limit(8),
+    (async () => {
+      const hoy = new Date().toISOString().slice(0, 10);
+      const results: ProximoPartido[] = [];
+      for (const cat of CATEGORIES) {
+        const { data } = await supabase
+          .from("fixture_partidos")
+          .select("id, categoria, rival, fecha_partido, hora, cancha, estado")
+          .eq("categoria", cat)
+          .eq("estado", "programado")
+          .gte("fecha_partido", hoy)
+          .order("fecha_partido", { ascending: true })
+          .limit(5);
+        const lista = (data ?? []) as ProximoPartido[];
+        const isWeekend = (f: string) => {
+          const d = new Date(`${f}T12:00:00`);
+          const day = d.getDay();
+          return day === 0 || day === 6;
+        };
+        const next = lista.find((p) => isWeekend(p.fecha_partido ?? "")) ?? lista[0] ?? null;
+        if (next) results.push(next);
+      }
+      return results;
+    })(),
     supabase
       .from("goleadores")
       .select(
@@ -236,8 +265,7 @@ async function getDashboardData() {
   const ultimosResultados = (ultimosResultadosRes.data ??
     []) as UltimoResultado[];
   const posiciones = (posicionesRes.data ?? []) as Posicion[];
-  const proximosPartidos = (proximosPartidosRes.data ??
-    []) as ProximoPartido[];
+  const proximosPartidos = (proximosPartidosRes ?? []) as ProximoPartido[];
   const tablaClausura2015 = (clausuraRes.data ?? []) as FilaClausura[];
   const clausuraError = clausuraRes.error;
   const goleadores = (goleadoresRes.data ?? []) as Goleador[];
@@ -308,6 +336,26 @@ function formatDate(value: string | null | undefined) {
     day: "2-digit",
     month: "short",
   });
+}
+
+function dayNumber(fecha: string | null | undefined): string {
+  if (!fecha) return "--";
+  const d = new Date(`${fecha}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return "--";
+  return d.toLocaleDateString("es-CL", { day: "2-digit" });
+}
+
+function formatFechaCard(fecha: string | null | undefined): string {
+  if (!fecha) return "";
+  const raw = fecha.includes("T") ? fecha : `${fecha}T12:00:00`;
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return "";
+  const str = d.toLocaleDateString("es-CL", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 export default async function Home({
@@ -398,6 +446,16 @@ export default async function Home({
   const esTituloAnual = (t: Titulo) =>
     (t.detalle ?? "").toLowerCase().includes("anual");
 
+  const titulosParaDetalle = TITULOS_ORDER.flatMap((equipo) =>
+    (titulosPorEquipo[equipo] ?? []).map((t) => ({
+      id: t.id,
+      equipo: getEquipoTitulosLabel(equipo),
+      detalle: t.detalle ?? "",
+      anio: t.anio,
+      esAnual: esTituloAnual(t),
+    }))
+  );
+
   const titulosOrdenadosParaCopas = [...titulosUnicos].sort((a, b) => {
     const aAnual = esTituloAnual(a);
     const bAnual = esTituloAnual(b);
@@ -425,10 +483,8 @@ export default async function Home({
   })();
 
   const proximoPorCategoria: Record<string, ProximoPartido | undefined> = {};
-  for (const cat of CATEGORIES) {
-    proximoPorCategoria[cat] = proximosPartidos.find(
-      (p) => p.categoria === cat || isMaestrosTeam(p.rival)
-    );
+  for (const p of proximosPartidos) {
+    if (p.categoria) proximoPorCategoria[p.categoria] = p;
   }
 
   const proximoCumple = calcularProximoCumple(jugadoresCumple);
@@ -449,19 +505,14 @@ export default async function Home({
   };
   const categoriasVisibles: CategoryName[] =
     tab === "general" ? [...CATEGORIES] : [categoryByTab[tab]];
-  const tabsConfig: Array<{ slug: TabSlug; label: string }> = [
-    { slug: "general", label: "Temas varios" },
-    { slug: "junior", label: "Junior" },
-    { slug: "senior", label: "Senior" },
-    { slug: "super-senior-futbolito", label: "Super Senior futbolito" },
-    { slug: "super-senior-futbol", label: "Super Senior fútbol" },
-  ];
-  const generalTab = tabsConfig[0];
-  const categoryTabs = tabsConfig.slice(1);
-
   return (
     <div className="min-h-screen bg-black text-zinc-50">
-      <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-4 pb-10 pt-0 sm:px-6 lg:px-8 lg:pt-0">
+      <main
+        className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-4 pt-0 sm:px-6 lg:px-8 lg:pt-0"
+        style={{
+          paddingBottom: "calc(6.5rem + max(env(safe-area-inset-bottom), 0.5rem))",
+        }}
+      >
         {/* Header */}
         <header
           className="-mx-4 flex flex-col gap-4 border-b border-emerald-500/40 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.30),rgba(2,6,23,0.9)_65%)] px-4 pb-6 shadow-[0_0_34px_rgba(16,185,129,0.18)] sm:-mx-6 sm:flex-row sm:items-end sm:justify-between sm:px-6 lg:-mx-8 lg:px-8"
@@ -494,57 +545,6 @@ export default async function Home({
 
         <UserGreeting />
 
-        {/* Navegación superior por pestañas */}
-        <nav
-          className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-2"
-          aria-label="Secciones"
-        >
-          <Link
-            href="/"
-            aria-label="Temas varios"
-            className={`mb-2 inline-flex h-24 w-full items-center justify-center rounded-xl border px-3 text-center text-sm font-extrabold tracking-wide text-white transition-transform duration-200 ${
-              tab === generalTab.slug
-                ? "border-emerald-300 shadow-[0_0_28px_rgba(16,185,129,0.95),0_0_52px_rgba(16,185,129,0.6),inset_0_0_16px_rgba(16,185,129,0.38)] hover:-translate-y-0.5"
-                : "border-emerald-400/90 shadow-[0_0_18px_rgba(16,185,129,0.6)] opacity-100 hover:-translate-y-0.5 hover:shadow-[0_0_26px_rgba(16,185,129,0.8)]"
-            }`}
-            style={{
-              backgroundImage:
-                "linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.22)), url('/temas-varios-banner.png')",
-              backgroundSize: "contain",
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "center",
-            }}
-          >
-            <span className="sr-only">{generalTab.label}</span>
-          </Link>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {categoryTabs.map((t) => {
-              const active = tab === t.slug;
-              return (
-                <Link
-                  key={t.slug}
-                  href={t.slug === "general" ? "/" : `/?tab=${t.slug}`}
-                  className={`inline-flex h-14 min-w-0 items-center justify-start gap-1.5 rounded-xl px-2 text-left text-[11px] font-semibold leading-tight whitespace-normal break-words transition sm:px-3 sm:text-xs ${
-                    active
-                      ? "bg-cyan-500 text-black shadow-[0_0_10px_rgba(34,211,238,0.45)]"
-                      : "bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
-                  }`}
-                >
-                  <Image
-                    src="/logo_maestros.png"
-                    alt=""
-                    width={18}
-                    height={18}
-                    className="h-[18px] w-[18px] flex-shrink-0 rounded-full object-cover"
-                    aria-hidden
-                  />
-                  {t.label}
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
-
         <div
           className={
             tab === "general"
@@ -552,7 +552,98 @@ export default async function Home({
               : "space-y-6"
           }
         >
-          {/* En Temas varios, mostrar primero Fixture */}
+          {/* Temas varios: primero las tarjetas (Mensaje, Cumpleaños, Recuerdo, Entrevista, Sticker) */}
+          {tab === "general" && (
+            <section className="grid gap-4 md:grid-cols-2">
+              <MensajePresidenteCard />
+              <article className="flex h-full min-h-[380px] flex-col rounded-2xl border border-emerald-700/60 bg-gradient-to-b from-emerald-950/90 via-emerald-950/70 to-zinc-950 px-4 pt-4 pb-2 shadow-md shadow-emerald-900/50">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
+                    El cumpleaños Maestro
+                  </p>
+                  {proximoCumple && (
+                    <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-200">
+                      {proximoCumpleFechaEtiqueta}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-2 flex flex-1 flex-col items-center gap-2">
+                  <div className="relative h-44 w-full max-w-[260px] overflow-hidden rounded-xl bg-black/60">
+                    {proximoCumpleFoto ? (
+                      <Image
+                        src={proximoCumpleFoto}
+                        alt="Cumpleañero Maestro"
+                        fill
+                        sizes="260px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-center text-xs text-zinc-400">
+                        Foto pendiente
+                      </div>
+                    )}
+                  </div>
+                  {proximoCumple ? (
+                    <div className="w-full space-y-1.5 text-center">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                          Próximo cumpleañero
+                        </p>
+                        <p className="mt-0.5 text-sm font-semibold text-zinc-50">
+                          {proximoCumple.jugador.nombre}
+                          {proximoCumple.jugador.apodo ? (
+                            <>
+                              {" "}
+                              <span className="font-bold italic text-amber-300">
+                                {proximoCumple.jugador.apodo}
+                              </span>
+                            </>
+                          ) : null}{" "}
+                          <span className="text-zinc-50">
+                            {proximoCumple.jugador.apellido}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="flex items-end justify-between gap-4 text-left">
+                        <div>
+                          <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                            Fecha
+                          </p>
+                          <p className="text-sm font-medium text-zinc-100">
+                            {proximoCumpleFechaEtiqueta}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[11px] uppercase tracking-wide text-emerald-300">
+                            Cuenta regresiva
+                          </p>
+                          <p className="text-2xl font-extrabold tracking-tight text-emerald-200 sm:text-3xl">
+                            {proximoCumple.diasRestantes === 0
+                              ? "¡Hoy!"
+                              : `Quedan ${proximoCumple.diasRestantes} ${
+                                  proximoCumple.diasRestantes === 1
+                                    ? "día"
+                                    : "días"
+                                }`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-sm text-zinc-400 text-center">
+                      Aún no hay fechas de nacimiento registradas para calcular el
+                      próximo cumpleaños.
+                    </p>
+                  )}
+                </div>
+              </article>
+              <RecuerdoMaestroCard />
+              <EntrevistaMaestraCard />
+              <StickerDelMesCard />
+            </section>
+          )}
+
+          {/* Fixture */}
           {tab === "general" && (
             <section className="space-y-3">
               <FixtureCard />
@@ -575,8 +666,9 @@ export default async function Home({
             </span>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className={`grid gap-3 sm:gap-4 ${tab === "general" ? "grid-cols-2" : "grid-cols-1"}`}>
             {categoriasVisibles.map((categoria) => {
+              const vistaEquipo = tab !== "general";
               const lista = resultadosPorCategoria[categoria] ?? [];
               let ultimo: UltimoResultado | undefined = lista[0];
               // Placeholder para Maestros FC futbolito: último partido 2-4 vs La Gloria (derrota)
@@ -624,90 +716,181 @@ export default async function Home({
                 };
               }
               const etiquetaArriba = RESUMEN_ETIQUETA_ARRIBA[categoria];
-              const plantelSlug = CATEGORIA_TO_PLANTEL_SLUG[categoria];
-              const BotonPlantilla = (
-                <Link
-                  href={`/equipos/${plantelSlug}`}
-                  className="w-fit rounded-full bg-emerald-500 px-3 py-1 text-[10px] font-semibold text-black shadow-md shadow-emerald-900 transition hover:bg-emerald-400"
+
+              const proximo = vistaEquipo ? proximoPorCategoria[categoria] : null;
+              const proximoRivalNombre = proximo?.rival ?? "Por definir";
+              const proximoLogoRival = RIVAL_LOGO[proximoRivalNombre] ?? null;
+
+              const ganamos = !!ultimo && (ultimo.goles_maestros ?? 0) > (ultimo.goles_rival ?? 0);
+              const empate = !!ultimo && (ultimo.goles_maestros ?? 0) === (ultimo.goles_rival ?? 0);
+              const marcador = ultimo
+                ? `${ultimo.goles_maestros ?? "-"} - ${ultimo.goles_rival ?? "-"}`
+                : "—";
+              const rivalNombre = ultimo?.rival ?? "—";
+              const logoRival = ultimo ? (RIVAL_LOGO[ultimo.rival ?? ""] ?? null) : null;
+
+              const logoSize = vistaEquipo ? "h-12 w-12" : "h-10 w-10";
+              const nameSize = vistaEquipo ? "text-[13px]" : "text-[11px]";
+              const scoreSize = vistaEquipo ? "text-[28px]" : "text-xl";
+              const bodyPad = vistaEquipo ? "py-5" : "py-3";
+
+              const cajaUltimo = (
+                <article
+                  className={`flex flex-col overflow-hidden rounded-2xl border shadow-lg ${
+                    !ultimo
+                      ? "border-zinc-700/50"
+                      : ganamos
+                        ? "border-emerald-600/50"
+                        : empate
+                          ? "border-zinc-600/50"
+                          : "border-red-700/50"
+                  }`}
                 >
-                  Ver plantilla 2026
-                </Link>
+                  <div
+                    className={`px-3 py-1.5 text-center ${
+                      !ultimo
+                        ? "bg-zinc-800/60"
+                        : ganamos
+                          ? "bg-emerald-800/40"
+                          : empate
+                            ? "bg-zinc-700/40"
+                            : "bg-red-900/40"
+                    }`}
+                  >
+                    <p
+                      className={`text-[10px] font-bold uppercase tracking-widest ${
+                        !ultimo
+                          ? "text-zinc-500"
+                          : ganamos
+                            ? "text-emerald-300"
+                            : empate
+                              ? "text-zinc-400"
+                              : "text-red-300"
+                      }`}
+                    >
+                      Último partido
+                    </p>
+                  </div>
+                  <div
+                    className={`flex flex-1 flex-col items-center justify-center gap-1.5 px-2 ${bodyPad} ${
+                      !ultimo
+                        ? "bg-zinc-900/60"
+                        : ganamos
+                          ? "bg-gradient-to-b from-emerald-950/50 to-zinc-950"
+                          : empate
+                            ? "bg-gradient-to-b from-zinc-800/30 to-zinc-950"
+                            : "bg-gradient-to-b from-red-950/50 to-zinc-950"
+                    }`}
+                  >
+                    {ultimo ? (
+                      <>
+                        <div className={`relative flex-shrink-0 overflow-hidden rounded-full border border-white/20 bg-black/40 ${logoSize}`}>
+                          {logoRival ? (
+                            <Image src={logoRival} alt={rivalNombre} width={48} height={48} className="h-full w-full object-contain p-0.5" />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center text-base">⚽</span>
+                          )}
+                        </div>
+                        <p className={`text-center font-semibold text-zinc-100 ${nameSize}`}>
+                          {rivalNombre}
+                        </p>
+                        <p className={`font-extrabold tabular-nums leading-none text-zinc-50 ${scoreSize}`}>
+                          {marcador}
+                        </p>
+                        <span
+                          className={`mt-0.5 rounded-full border px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+                            ganamos
+                              ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-300"
+                              : empate
+                                ? "border-zinc-500/30 bg-zinc-500/15 text-zinc-400"
+                                : "border-red-500/30 bg-red-500/15 text-red-300"
+                          }`}
+                        >
+                          {ganamos ? "Victoria" : empate ? "Empate" : "Derrota"}
+                        </span>
+                        {ultimo.fecha_partido && (
+                          <p className="mt-0.5 text-[10px] text-zinc-500">
+                            {formatFechaCard(ultimo.fecha_partido)}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="py-4 text-center text-[11px] text-zinc-500">
+                        Sin partidos registrados
+                      </p>
+                    )}
+                  </div>
+                </article>
               );
 
-              if (!ultimo) {
-                return (
-                  <div key={categoria} className="flex h-full flex-col gap-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-                      {etiquetaArriba}
+              const cajaProximo = vistaEquipo ? (
+                <article className="flex flex-col overflow-hidden rounded-2xl border border-sky-700/40 shadow-lg">
+                  <div className="bg-sky-800/30 px-3 py-1.5 text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-sky-300">
+                      Próximo partido
                     </p>
-                    {BotonPlantilla}
-                    <article className="flex min-h-[140px] flex-col justify-between rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 shadow-sm">
-                      <p className="text-sm text-zinc-400">
-                        Aún no hay partidos registrados para este fin de semana.
-                      </p>
-                    </article>
                   </div>
-                );
-              }
-
-              const ganamos = (ultimo.goles_maestros ?? 0) > (ultimo.goles_rival ?? 0);
-              const empate = (ultimo.goles_maestros ?? 0) === (ultimo.goles_rival ?? 0);
-              const marcador = `${ultimo.goles_maestros ?? "-"} - ${ultimo.goles_rival ?? "-"}`;
-              const rivalNombre = ultimo.rival ?? "Rival";
-              const logoRival = RIVAL_LOGO[rivalNombre] ?? null;
+                  <div className={`flex flex-1 flex-col items-center justify-center gap-1.5 bg-gradient-to-b from-sky-950/30 to-zinc-950 px-2 ${bodyPad}`}>
+                    {proximo ? (
+                      <>
+                        <div className={`relative flex-shrink-0 overflow-hidden rounded-full border border-white/20 bg-black/40 ${logoSize}`}>
+                          {proximoLogoRival ? (
+                            <Image src={proximoLogoRival} alt={proximoRivalNombre} width={48} height={48} className="h-full w-full object-contain p-0.5" />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center text-base">⚽</span>
+                          )}
+                        </div>
+                        <p className={`text-center font-semibold text-zinc-100 ${nameSize}`}>
+                          vs {proximoRivalNombre}
+                        </p>
+                        <p className={`font-extrabold tabular-nums leading-none text-zinc-500 ${scoreSize}`}>
+                          0 - 0
+                        </p>
+                        <p className="mt-0.5 text-center text-[10px] font-medium text-sky-300">
+                          {formatFechaCard(proximo.fecha_partido)}
+                          {proximo.hora ? ` · ${proximo.hora}` : ""}
+                        </p>
+                        {proximo.cancha && (
+                          <p className="text-center text-[10px] text-zinc-500">
+                            📍 {proximo.cancha}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="py-4 text-center text-[11px] text-zinc-500">
+                        Sin partido programado
+                      </p>
+                    )}
+                  </div>
+                </article>
+              ) : null;
 
               return (
                 <div key={categoria} className="flex h-full flex-col gap-2">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
                     {etiquetaArriba}
                   </p>
-                  {BotonPlantilla}
-                  <article
-                    className={`relative min-h-[140px] overflow-hidden rounded-2xl border p-3 shadow-md ${
-                      ganamos
-                        ? "border-emerald-600/70 bg-gradient-to-br from-emerald-900/90 via-emerald-950/80 to-zinc-950"
-                        : empate
-                          ? "border-zinc-600 bg-zinc-900/80"
-                          : "border-red-700/60 bg-gradient-to-br from-red-950/90 via-red-900/70 to-zinc-950"
-                    }`}
-                  >
-                    <div className="relative z-10 flex h-full w-full flex-row items-center justify-between gap-3">
-                      {logoRival && (
-                        <div className="relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-full border border-white/25 bg-black/50">
-                          <Image
-                            src={logoRival}
-                            alt={rivalNombre}
-                            width={112}
-                            height={112}
-                            className="h-full w-full object-contain p-1"
-                          />
-                        </div>
-                      )}
-                      <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-center">
-                        <p
-                          className={`w-full text-[11px] font-black uppercase tracking-[0.2em] drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] sm:text-xs ${
-                            ganamos ? "text-emerald-200" : empate ? "text-zinc-400" : "text-red-200"
-                          }`}
-                          aria-hidden
-                        >
-                          {ganamos ? "victoria" : empate ? "empate" : "derrota"}
-                        </p>
-                        <p className="w-full truncate text-xs font-semibold text-zinc-100">
-                          {rivalNombre}
-                        </p>
-                        <p className="w-full text-2xl font-bold tabular-nums text-zinc-50">
-                          {marcador}
-                        </p>
-                      </div>
-                    </div>
-                  </article>
+
+                  <div className={vistaEquipo ? "grid grid-cols-2 gap-2.5" : ""}>
+                    {cajaUltimo}
+                    {cajaProximo}
+                  </div>
+
+                  {vistaEquipo && (
+                    <Link
+                      href="/asistencia"
+                      className="w-full rounded-xl border border-cyan-600/70 bg-cyan-600/25 py-2.5 text-center text-[12px] font-semibold text-cyan-200 transition hover:bg-cyan-600/40"
+                    >
+                      Confirmar asistencia
+                    </Link>
+                  )}
                 </div>
               );
             })}
           </div>
           </section>
 
-          {/* Tablas de posiciones: mismo ancho que las 4 cajas del resumen */}
+          {/* Tablas de posiciones: 2x2 para menos scroll */}
           <section className="space-y-3">
           <h2 className="text-lg font-semibold text-zinc-50">
             Tablas de posiciones{" "}
@@ -715,7 +898,7 @@ export default async function Home({
               (Campeonato Clausura 2025 terminado)
             </span>
           </h2>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className={`grid gap-3 sm:gap-4 ${tab === "general" ? "grid-cols-2" : "grid-cols-1"}`}>
             {categoriasVisibles.map((categoria) => {
               const esSSFutbolito = categoria === "Super Senior Futbolito";
               const esSSMartes = categoria === "Super Senior Fútbol";
@@ -724,11 +907,12 @@ export default async function Home({
               const usaClausura = false;
               const tabla = (posicionesPorCategoria[categoria] ?? []).slice(0, 12);
               const filasClausura = tablaClausura2015;
+              const vistaExpandida = tab !== "general";
 
               return (
                 <article
                   key={categoria}
-                  className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/70"
+                  className={`overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/70 ${vistaExpandida ? "max-w-full" : ""}`}
                 >
                     <header className="flex items-center justify-between border-b border-zinc-800/80 bg-zinc-950/80 px-3 py-2.5">
                       <p className="text-xs font-semibold uppercase tracking-wide text-emerald-300">
@@ -736,7 +920,7 @@ export default async function Home({
                       </p>
                     </header>
 
-                    <div className="max-h-96 overflow-auto">
+                    <div className={`overflow-auto ${vistaExpandida ? "max-h-[28rem]" : "max-h-72 sm:max-h-80"}`}>
                       {usaClausura ? (
                         <table className="min-w-full text-left text-xs text-zinc-300">
                           <thead className="sticky top-0 bg-zinc-950">
@@ -750,7 +934,7 @@ export default async function Home({
                             {filasClausura.map((row) => {
                               const esMaestros = isMaestrosTeam(row.equipo);
                               const nombreEquipo = esMaestros
-                                ? "Maestros"
+                                ? (CATEGORY_LABELS[categoria as CategoryName] ?? "")
                                 : formatEquipoLabel(row.equipo) || `Equipo ${row.posicion}`;
                               const campeon = row.posicion === 1;
                               return (
@@ -788,7 +972,7 @@ export default async function Home({
                           <tbody>
                             {Array.from({ length: 12 }, (_, i) => i + 1).map((pos) => {
                               const esMaestros = pos === 7;
-                              const nombreEquipo = esMaestros ? "Maestros" : `Equipo ${pos}`;
+                              const nombreEquipo = esMaestros ? (CATEGORY_LABELS[categoria as CategoryName] ?? "") : `Equipo ${pos}`;
                               const campeon = pos === 1;
                               return (
                                 <tr
@@ -825,7 +1009,7 @@ export default async function Home({
                           <tbody>
                             {Array.from({ length: 8 }, (_, i) => i + 1).map((pos) => {
                               const esMaestros = pos === 2;
-                              const nombreEquipo = esMaestros ? "Maestros" : `Equipo ${pos}`;
+                              const nombreEquipo = esMaestros ? (CATEGORY_LABELS[categoria as CategoryName] ?? "") : `Equipo ${pos}`;
                               const campeon = pos === 1;
                               return (
                                 <tr
@@ -862,7 +1046,7 @@ export default async function Home({
                           <tbody>
                             {Array.from({ length: 12 }, (_, i) => i + 1).map((pos) => {
                               const esMaestros = pos === 10;
-                              const nombreEquipo = esMaestros ? "Maestros" : `Equipo ${pos}`;
+                              const nombreEquipo = esMaestros ? (CATEGORY_LABELS[categoria as CategoryName] ?? "") : `Equipo ${pos}`;
                               const promocion = pos === 10;
                               const descendido = pos >= 11;
                               const campeon = pos === 1;
@@ -909,7 +1093,7 @@ export default async function Home({
                           <tbody>
                             {Array.from({ length: 12 }, (_, i) => i + 1).map((pos) => {
                               const esMaestros = pos === 4;
-                              const nombreEquipo = esMaestros ? "Maestros" : `Equipo ${pos}`;
+                              const nombreEquipo = esMaestros ? (CATEGORY_LABELS[categoria as CategoryName] ?? "") : `Equipo ${pos}`;
                               const descendido = pos >= 10;
                               const campeon = pos === 1;
                               return (
@@ -939,20 +1123,27 @@ export default async function Home({
                             })}
                           </tbody>
                         </table>
-                      ) : (
+                      ) : vistaExpandida ? (
                         <table className="min-w-full text-left text-xs text-zinc-300">
                           <thead className="sticky top-0 bg-zinc-950">
                             <tr className="border-b border-zinc-800 text-[11px] uppercase tracking-wide text-zinc-500">
                               <th className="px-2 py-2 font-medium">#</th>
-                              <th className="px-2 py-2 font-medium">Equipo</th>
-                              <th className="w-0 px-1 py-2" aria-label="Estado" />
+                              <th className="min-w-[7rem] px-2 py-2 font-medium text-left">Equipo</th>
+                              <th className="px-2 py-2 font-medium text-center">PJ</th>
+                              <th className="px-2 py-2 font-medium text-center">PG</th>
+                              <th className="px-2 py-2 font-medium text-center">PE</th>
+                              <th className="px-2 py-2 font-medium text-center">PP</th>
+                              <th className="px-2 py-2 font-medium text-center">Pts</th>
+                              <th className="px-2 py-2 font-medium text-center">GF</th>
+                              <th className="px-2 py-2 font-medium text-center">GC</th>
+                              <th className="w-0 px-2 py-2" aria-label="Estado" />
                             </tr>
                           </thead>
                           <tbody>
                             {tabla.length === 0 ? (
                               <tr>
                                 <td
-                                  colSpan={3}
+                                  colSpan={10}
                                   className="px-3 py-3 text-center text-[11px] text-zinc-500"
                                 >
                                   Aún no hay posiciones registradas.
@@ -964,7 +1155,7 @@ export default async function Home({
                                 const totalEquipos = tabla.length;
                                 const esMaestros = isMaestrosTeam(row.equipo);
                                 const nombreEquipo = esMaestros
-                                  ? "Maestros"
+                                  ? (CATEGORY_LABELS[categoria as CategoryName] ?? "")
                                   : formatEquipoLabel(row.equipo) || `Equipo ${pos}`;
                                 const campeon = pos === 1;
                                 const esSeniorTabla = categoria === "Senior Fútbol";
@@ -982,21 +1173,75 @@ export default async function Home({
                                         : "bg-zinc-900/40 text-zinc-500 opacity-80 hover:bg-zinc-900/60"
                                     }`}
                                   >
-                                    <td className="px-2 py-1.5 w-8">{pos}</td>
-                                    <td className="px-2 py-1.5 font-medium">{nombreEquipo}</td>
-                                    <td className="px-1 py-1.5 text-right">
+                                    <td className="w-8 shrink-0 px-2 py-1.5">{pos}</td>
+                                    <td className="min-w-0 py-1.5 font-medium truncate" title={nombreEquipo}>{nombreEquipo}</td>
+                                    <td className="px-2 py-1.5 text-center tabular-nums">{row.pj ?? "-"}</td>
+                                    <td className="px-2 py-1.5 text-center tabular-nums">{row.pg ?? "-"}</td>
+                                    <td className="px-2 py-1.5 text-center tabular-nums">{row.pe ?? "-"}</td>
+                                    <td className="px-2 py-1.5 text-center tabular-nums">{row.pp ?? "-"}</td>
+                                    <td className="px-2 py-1.5 text-center tabular-nums font-semibold">{row.pts ?? "-"}</td>
+                                    <td className="px-2 py-1.5 text-center tabular-nums">{row.gf ?? "-"}</td>
+                                    <td className="px-2 py-1.5 text-center tabular-nums">{row.gc ?? "-"}</td>
+                                    <td className="w-8 shrink-0 px-2 py-1.5 text-right">
                                       {campeon ? (
-                                        <span className="inline-flex items-center gap-0.5 rounded bg-amber-900/60 px-1.5 py-0.5 text-[10px] font-medium text-amber-300" title="Campeón">
-                                          <span aria-hidden>🏆</span> Campeón
-                                        </span>
+                                        <span className="inline-flex items-center justify-center rounded bg-amber-900/60 px-1 py-0.5 text-[10px] font-medium text-amber-300" title="Campeón" aria-label="Campeón">🏆</span>
                                       ) : promocion ? (
-                                        <span className="inline-flex items-center gap-0.5 rounded bg-sky-900/50 px-1.5 py-0.5 text-[10px] font-medium text-sky-300" title="Juega promoción">
-                                          <span aria-hidden>↔</span> Promoción
-                                        </span>
+                                        <span className="inline-flex items-center justify-center rounded bg-sky-900/50 px-1 py-0.5 text-[10px] font-medium text-sky-300" title="Juega promoción" aria-label="Promoción">↔</span>
                                       ) : descendido ? (
-                                        <span className="inline-flex items-center gap-0.5 rounded bg-rose-900/60 px-1.5 py-0.5 text-[10px] font-medium text-rose-300" title="Descendido">
-                                          <span aria-hidden>↓</span> Descendido
-                                        </span>
+                                        <span className="inline-flex items-center justify-center rounded bg-rose-900/60 px-1 py-0.5 text-[10px] font-medium text-rose-300" title="Descendido" aria-label="Descendido">↓</span>
+                                      ) : null}
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            )}
+                          </tbody>
+                        </table>
+                      ) : (
+                        <table className="w-full table-fixed text-left text-xs text-zinc-300">
+                          <tbody>
+                            {tabla.length === 0 ? (
+                              <tr>
+                                <td
+                                  colSpan={3}
+                                  className="px-3 py-3 text-center text-[11px] text-zinc-500"
+                                >
+                                  Aún no hay posiciones registradas.
+                                </td>
+                              </tr>
+                            ) : (
+                              tabla.map((row, index) => {
+                                const pos = index + 1;
+                                const totalEquipos = tabla.length;
+                                const esMaestros = isMaestrosTeam(row.equipo);
+                                const nombreEquipo = esMaestros
+                                  ? (CATEGORY_LABELS[categoria as CategoryName] ?? "")
+                                  : formatEquipoLabel(row.equipo) || `Equipo ${pos}`;
+                                const campeon = pos === 1;
+                                const esSeniorTabla = categoria === "Senior Fútbol";
+                                const esJuniorTabla = categoria === "Junior Fútbol";
+                                const promocion = esSeniorTabla && pos === 10;
+                                const descendido =
+                                  (esSeniorTabla || esJuniorTabla) &&
+                                  pos >= Math.max(1, totalEquipos - 1);
+                                return (
+                                  <tr
+                                    key={row.id}
+                                    className={`border-b border-zinc-900/60 text-[11px] last:border-0 ${
+                                      esMaestros
+                                        ? "bg-emerald-800 text-white font-bold"
+                                        : "bg-zinc-900/40 text-zinc-500 opacity-80 hover:bg-zinc-900/60"
+                                    }`}
+                                  >
+                                    <td className="w-8 shrink-0 px-1 py-1.5">{pos}</td>
+                                    <td className="min-w-0 py-1.5 pr-1 font-medium truncate" title={nombreEquipo}>{nombreEquipo}</td>
+                                    <td className="w-8 shrink-0 px-0.5 py-1.5 text-right">
+                                      {campeon ? (
+                                        <span className="inline-flex items-center justify-center rounded bg-amber-900/60 px-1 py-0.5 text-[10px] font-medium text-amber-300" title="Campeón" aria-label="Campeón">🏆</span>
+                                      ) : promocion ? (
+                                        <span className="inline-flex items-center justify-center rounded bg-sky-900/50 px-1 py-0.5 text-[10px] font-medium text-sky-300" title="Juega promoción" aria-label="Promoción">↔</span>
+                                      ) : descendido ? (
+                                        <span className="inline-flex items-center justify-center rounded bg-rose-900/60 px-1 py-0.5 text-[10px] font-medium text-rose-300" title="Descendido" aria-label="Descendido">↓</span>
                                       ) : null}
                                     </td>
                                   </tr>
@@ -1023,9 +1268,6 @@ export default async function Home({
                   (data desde 2025 en adelante)
                 </span>
               </h2>
-              <span className="text-[11px] text-zinc-400">
-                Goles y asistencias por equipo
-              </span>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -1073,7 +1315,7 @@ export default async function Home({
                         {(goleadoresPorCategoria[categoria] ?? []).length >
                         0
                           ? (goleadoresPorCategoria[categoria] ?? [])
-                              .slice(0, 7)
+                              .slice(0, 4)
                               .map((row) => (
                                 <tr
                                   key={row.id}
@@ -1095,7 +1337,7 @@ export default async function Home({
                                   </td>
                                 </tr>
                               ))
-                          : Array.from({ length: 7 }, (_, i) => i + 1).map(
+                          : Array.from({ length: 4 }, (_, i) => i + 1).map(
                               (posicion) => (
                                 <tr
                                   key={posicion}
@@ -1127,7 +1369,8 @@ export default async function Home({
             </section>
           </section>
 
-          {/* Títulos del club */}
+          {/* Títulos del club: solo en vista general */}
+          {tab === "general" && (
           <section className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 shadow-lg">
           {/* Encabezado principal */}
           <div className="flex items-center justify-between gap-6">
@@ -1186,41 +1429,39 @@ export default async function Home({
                 Ranking por equipos (estrellas)
               </p>
               <div className="space-y-2 text-sm text-zinc-200">
-                {resumenTitulos.map(({ equipo, cantidad, lista }) => (
-                  <div
-                    key={equipo}
-                    className="flex items-center justify-between rounded-lg bg-zinc-900/80 px-3 py-2"
-                  >
-                    <span className="text-xs font-semibold uppercase tracking-wide text-emerald-300">
-                      {equipo}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs text-zinc-400">
-                        {cantidad} {cantidad === 1 ? "título" : "títulos"}
+                {resumenTitulos.map(({ equipo, cantidad, lista }) => {
+                  const label = getEquipoTitulosLabel(equipo);
+                  return (
+                    <div
+                      key={equipo}
+                      className="flex items-center gap-3 rounded-lg bg-zinc-900/80 px-3 py-2"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-zinc-800 text-sm font-bold text-zinc-100">
+                        {cantidad}
                       </span>
-                      <span className="flex items-center gap-0.5">
+                      <span className="min-w-0 flex-1 text-xs font-semibold uppercase tracking-wide text-emerald-300">
+                        {label}
+                      </span>
+                      <span className="flex shrink-0 items-center gap-0.5">
                         {lista.map((t) =>
                           esTituloAnual(t) ? (
                             <span
                               key={t.id}
-                              className="inline-block text-amber-300 scale-110"
+                              className="inline-block scale-110 text-amber-300"
                               title="Campeón anual"
                             >
                               ★
                             </span>
                           ) : (
-                            <span
-                              key={t.id}
-                              className="text-yellow-500/55"
-                            >
+                            <span key={t.id} className="text-yellow-500/55">
                               ⭐
                             </span>
                           )
                         )}
                       </span>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -1229,43 +1470,7 @@ export default async function Home({
               <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
                 Detalle de títulos
               </p>
-
-              {TITULOS_ORDER.map((equipo) =>
-                (titulosPorEquipo[equipo] ?? []).map((t) => (
-                  <div
-                    key={t.id}
-                    className="flex items-center gap-2 rounded-xl bg-zinc-900/70 px-2.5 py-1"
-                  >
-                    <div className="relative flex h-4 w-4 items-center justify-center overflow-hidden">
-                      <Image
-                        src="/copa.png"
-                        alt="Copa"
-                        fill
-                        sizes="36px"
-                        className="object-contain invert"
-                      />
-                    </div>
-                    <div className="flex w-full items-center justify-between text-[10px]">
-                      <span className="font-semibold uppercase tracking-wide text-emerald-300">
-                        {equipo}
-                      </span>
-                      <span className="text-zinc-200">
-                        {t.detalle} {t.anio}{" "}
-                        {esTituloAnual(t) ? (
-                          <span
-                            className="ml-1 inline-block text-amber-300 scale-110"
-                            title="Campeón anual"
-                          >
-                            ★
-                          </span>
-                        ) : (
-                          <span className="ml-1 text-yellow-500/55">⭐</span>
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                )),
-              )}
+              <TitulosDetalleExpandable titulos={titulosParaDetalle} />
               {/*
               <div className="flex items-center gap-3 rounded-xl bg-zinc-900/70 px-3 py-1.5">
                 <div className="relative flex h-5 w-5 items-center justify-center overflow-hidden">
@@ -1279,7 +1484,7 @@ export default async function Home({
                 </div>
                 <div className="flex w-full items-center justify-between text-xs">
                   <span className="font-semibold uppercase tracking-wide text-emerald-300">
-                    Maestros Junior
+                    Junior
                   </span>
                   <span className="text-zinc-200">
                     Apertura 2011 <span className="ml-1">⭐️</span>
@@ -1299,7 +1504,7 @@ export default async function Home({
                 </div>
                 <div className="flex w-full items-center justify-between text-xs">
                   <span className="font-semibold uppercase tracking-wide text-emerald-300">
-                    Maestros Junior
+                    Junior
                   </span>
                   <span className="text-zinc-200">
                     Clausura 2012 <span className="ml-1">⭐️</span>
@@ -1319,7 +1524,7 @@ export default async function Home({
                 </div>
                 <div className="flex w-full items-center justify-between text-xs">
                   <span className="font-semibold uppercase tracking-wide text-emerald-300">
-                    Maestros Junior
+                    Junior
                   </span>
                   <span className="text-zinc-200">
                     Apertura 2013 <span className="ml-1">⭐️</span>
@@ -1339,7 +1544,7 @@ export default async function Home({
                 </div>
                 <div className="flex w-full items-center justify-between text-xs">
                   <span className="font-semibold uppercase tracking-wide text-emerald-300">
-                    Maestros Junior
+                    Junior
                   </span>
                   <span className="text-zinc-200">
                     Clausura 2014 <span className="ml-1">⭐️</span>
@@ -1359,7 +1564,7 @@ export default async function Home({
                 </div>
                 <div className="flex w-full items-center justify-between text-xs">
                   <span className="font-semibold uppercase tracking-wide text-emerald-300">
-                    Maestros Junior
+                    Junior
                   </span>
                   <span className="text-zinc-200">
                     Anual 2019 <span className="ml-1">⭐️</span>
@@ -1379,7 +1584,7 @@ export default async function Home({
                 </div>
                 <div className="flex w-full items-center justify-between text-xs">
                   <span className="font-semibold uppercase tracking-wide text-emerald-300">
-                    Maestros Junior
+                    Junior
                   </span>
                   <span className="text-zinc-200">
                     Anual 2022 <span className="ml-1">⭐️</span>
@@ -1398,7 +1603,7 @@ export default async function Home({
                 </div>
                 <div className="flex w-full items-center justify-between text-xs">
                   <span className="font-semibold uppercase tracking-wide text-emerald-300">
-                    Maestros SS Futbolito
+                    SS Futbolito
                   </span>
                   <span className="text-zinc-200">
                     Clausura 2024 <span className="ml-1">⭐️</span>
@@ -1418,7 +1623,7 @@ export default async function Home({
                 </div>
                 <div className="flex w-full items-center justify-between text-xs">
                   <span className="font-semibold uppercase tracking-wide text-emerald-300">
-                    Maestros SS Futbolito
+                    SS Futbolito
                   </span>
                   <span className="text-zinc-200">
                     Apertura 2025 <span className="ml-1">⭐️</span>
@@ -1438,7 +1643,7 @@ export default async function Home({
                 </div>
                 <div className="flex w-full items-center justify-between text-xs">
                   <span className="font-semibold uppercase tracking-wide text-emerald-300">
-                    Maestros SS Martes
+                    SS Fútbol
                   </span>
                   <span className="text-zinc-200">
                     Apertura 2024 <span className="ml-1">⭐️</span>
@@ -1458,7 +1663,7 @@ export default async function Home({
                 </div>
                 <div className="flex w-full items-center justify-between text-xs">
                   <span className="font-semibold uppercase tracking-wide text-emerald-300">
-                    Maestros SS Martes
+                    SS Fútbol
                   </span>
                   <span className="text-zinc-200">
                     Clausura 2024 <span className="ml-1">⭐️</span>
@@ -1478,7 +1683,7 @@ export default async function Home({
                 </div>
                 <div className="flex w-full items-center justify-between text-xs">
                   <span className="font-semibold uppercase tracking-wide text-emerald-300">
-                    Maestros Senior
+                    Senior
                   </span>
                   <span className="text-zinc-200">
                     Apertura 2013 <span className="ml-1">⭐️</span>
@@ -1489,109 +1694,8 @@ export default async function Home({
             </div>
           </div>
           </section>
-
-          {/* Resto de tarjetas dentro de Temas varios */}
-          {tab === "general" && (
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {/* Mensaje / palabras del presidente */}
-              <MensajePresidenteCard />
-
-              {/* El cumpleaños Maestro */}
-              <article className="flex h-full min-h-[420px] flex-col rounded-2xl border border-emerald-700/60 bg-gradient-to-b from-emerald-950/90 via-emerald-950/70 to-zinc-950 p-4 shadow-md shadow-emerald-900/50">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
-                    El cumpleaños Maestro
-                  </p>
-                  {proximoCumple && (
-                    <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-200">
-                      {proximoCumpleFechaEtiqueta}
-                    </span>
-                  )}
-                </div>
-
-                <div className="mt-3 flex flex-1 flex-col items-center gap-3">
-                  <div className="relative h-44 w-full max-w-[260px] overflow-hidden rounded-xl bg-black/60">
-                    {proximoCumpleFoto ? (
-                      <Image
-                        src={proximoCumpleFoto}
-                        alt="Cumpleañero Maestro"
-                        fill
-                        sizes="260px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-center text-xs text-zinc-400">
-                        Foto pendiente
-                      </div>
-                    )}
-                  </div>
-
-                  {proximoCumple ? (
-                    <div className="w-full space-y-2 text-center">
-                      <div>
-                        <p className="text-[11px] uppercase tracking-wide text-zinc-500">
-                          Próximo cumpleañero
-                        </p>
-                        <p className="mt-0.5 text-sm font-semibold text-zinc-50">
-                          {proximoCumple.jugador.nombre}
-                          {proximoCumple.jugador.apodo ? (
-                            <>
-                              {" "}
-                              <span className="font-bold italic text-amber-300">
-                                {proximoCumple.jugador.apodo}
-                              </span>
-                            </>
-                          ) : null}{" "}
-                          <span className="text-zinc-50">
-                            {proximoCumple.jugador.apellido}
-                          </span>
-                        </p>
-                      </div>
-
-                      <div className="flex items-end justify-between gap-4 text-left">
-                        <div>
-                          <p className="text-[11px] uppercase tracking-wide text-zinc-500">
-                            Fecha
-                          </p>
-                          <p className="text-sm font-medium text-zinc-100">
-                            {proximoCumpleFechaEtiqueta}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[11px] uppercase tracking-wide text-emerald-300">
-                            Cuenta regresiva
-                          </p>
-                          <p className="text-2xl font-extrabold tracking-tight text-emerald-200 sm:text-3xl">
-                            {proximoCumple.diasRestantes === 0
-                              ? "¡Hoy!"
-                              : `Quedan ${proximoCumple.diasRestantes} ${
-                                  proximoCumple.diasRestantes === 1
-                                    ? "día"
-                                    : "días"
-                                }`}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="mt-4 text-sm text-zinc-400 text-center">
-                      Aún no hay fechas de nacimiento registradas para calcular el
-                      próximo cumpleaños.
-                    </p>
-                  )}
-                </div>
-              </article>
-
-              {/* El recuerdo Maestro */}
-              <RecuerdoMaestroCard />
-
-              {/* Entrevista Maestra */}
-              <EntrevistaMaestraCard />
-
-              {/* Sticker del mes */}
-              <StickerDelMesCard />
-            </section>
           )}
+
         </div>
       </main>
     </div>

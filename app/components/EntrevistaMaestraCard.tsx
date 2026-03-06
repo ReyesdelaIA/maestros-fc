@@ -26,7 +26,7 @@ export default function EntrevistaMaestraCard() {
 
   return (
     <>
-      <section className="flex h-full min-h-[420px] flex-col rounded-2xl border border-sky-700/60 bg-gradient-to-b from-sky-950/80 via-slate-950 to-zinc-950 p-4 shadow-xl shadow-sky-900/40">
+      <section className="flex h-full min-h-[380px] flex-col rounded-2xl border border-sky-700/60 bg-gradient-to-b from-sky-950/80 via-slate-950 to-zinc-950 px-4 pt-4 pb-2 shadow-xl shadow-sky-900/40">
         <div className="mb-2 flex justify-start">
           <span className="inline-flex items-center rounded-full border border-sky-500/70 bg-sky-950/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-200">
             Entrevista
@@ -52,7 +52,7 @@ export default function EntrevistaMaestraCard() {
         <button
           type="button"
           onClick={abrir}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-sky-500/60 bg-sky-950/40 py-2.5 transition hover:bg-sky-900/60 hover:border-sky-400/70 active:scale-[0.98]"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-sky-500/60 bg-sky-950/40 py-2 transition hover:bg-sky-900/60 hover:border-sky-400/70 active:scale-[0.98]"
           aria-label="Ver entrevista"
         >
           <span className="relative inline-flex">
@@ -79,11 +79,11 @@ export default function EntrevistaMaestraCard() {
           </span>
         </button>
 
-        <h2 className="mt-3 text-center text-sm font-bold uppercase tracking-tight text-sky-100 md:text-base">
+        <h2 className="mt-2 text-center text-sm font-bold uppercase tracking-tight text-sky-100 md:text-base">
           ENTREVISTA MAESTRA
         </h2>
-        <p className="mt-2 text-center text-xs italic leading-relaxed text-sky-100/80 md:text-sm">
-          Raúl Lagos Izquierdo – Jugador de Maestros SS.
+        <p className="mt-1 text-center text-xs italic leading-relaxed text-sky-100/80 md:text-sm">
+          Raúl Lagos Izquierdo – Jugador de SS Fútbol.
         </p>
       </section>
 
@@ -134,7 +134,7 @@ export default function EntrevistaMaestraCard() {
               <div className="space-y-4 text-sm leading-relaxed text-sky-100/90">
                 <div>
                   <p className="font-semibold text-sky-100">
-                    • ¿Cómo ves a Maestros para este campeonato?
+                    • ¿Cómo ves al equipo para este campeonato?
                   </p>
                   <p className="mt-1 italic text-sky-100/80">
                     Lorem ipsum dolor sit amet consectetur adipiscing elit

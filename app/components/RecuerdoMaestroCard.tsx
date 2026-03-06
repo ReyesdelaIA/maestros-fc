@@ -27,7 +27,7 @@ export default function RecuerdoMaestroCard() {
 
   return (
     <>
-      <section className="flex h-full min-h-[420px] flex-col rounded-2xl border border-violet-700/50 bg-gradient-to-b from-violet-950/50 to-zinc-950 p-4 shadow-xl">
+      <section className="flex h-full min-h-[380px] flex-col rounded-2xl border border-violet-700/50 bg-gradient-to-b from-violet-950/50 to-zinc-950 px-4 pt-4 pb-2 shadow-xl">
         <div className="mb-2 flex justify-start">
           <span className="inline-flex items-center rounded-full border border-violet-500/60 bg-violet-950/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-300">
             Recuerdo
@@ -52,7 +52,7 @@ export default function RecuerdoMaestroCard() {
         <button
           type="button"
           onClick={abrir}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/50 bg-violet-950/40 py-2.5 transition hover:bg-violet-900/50 hover:border-violet-400/60 active:scale-[0.98]"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/50 bg-violet-950/40 py-2 transition hover:bg-violet-900/50 hover:border-violet-400/60 active:scale-[0.98]"
           aria-label="Ver recuerdo"
         >
           <span className="relative inline-flex">
@@ -80,10 +80,10 @@ export default function RecuerdoMaestroCard() {
             Toca para ver el recuerdo
           </span>
         </button>
-        <h2 className="mt-3 text-center text-sm font-bold uppercase tracking-tight text-zinc-50 md:text-base">
+        <h2 className="mt-2 text-center text-sm font-bold uppercase tracking-tight text-zinc-50 md:text-base">
           El recuerdo Maestro
         </h2>
-        <p className="mt-2 text-center text-xs italic leading-relaxed text-zinc-400 md:text-sm">
+        <p className="mt-1 text-center text-xs italic leading-relaxed text-zinc-400 md:text-sm">
           Un momento especial de la historia del club.
         </p>
       </section>
@@ -134,13 +134,13 @@ export default function RecuerdoMaestroCard() {
                   Hubo un tiempo en que la copa parecía maldita. Los campeonatos escapaban entre los dedos como agua fría, y la frustración se acumulaba en silencio, piedra sobre piedra, como una montaña que nadie quería nombrar.
                 </p>
                 <p>
-                  Pero en el año 2024, algo cambió. Había una confianza inusitada. Un fuego nuevo. El equipo jugó todo el semestre a alto nivel — y cuando los playoffs amenazaron con apagar la llama, los Maestros remontaron batalla tras batalla, cuartos, semis, con la garra de quienes saben que su hora ha llegado.
+                  Pero en el año 2024, algo cambió. Había una confianza inusitada. Un fuego nuevo. El equipo jugó todo el semestre a alto nivel — y cuando los playoffs amenazaron con apagar la llama, el equipo remontó batalla tras batalla, cuartos, semis, con la garra de quienes saben que su hora ha llegado.
                 </p>
                 <p>
                   Y llegó el sábado 24 de agosto.
                 </p>
                 <p>
-                  Esa mañana, bajo el mismo cielo de siempre, los Maestros SS no jugaron con las piernas… jugaron con el corazón caliente (y cabeza fría), fue una batalla. Y cuando el árbitro hizo sonar el pitazo final, algo que había sido negado durante años cayó por fin sobre sus hombros como luz dorada. ¡Qué desahogo lindo!
+                  Esa mañana, bajo el mismo cielo de siempre, SS Fútbol no jugó con las piernas… jugaron con el corazón caliente (y cabeza fría), fue una batalla. Y cuando el árbitro hizo sonar el pitazo final, algo que había sido negado durante años cayó por fin sobre sus hombros como luz dorada. ¡Qué desahogo lindo!
                 </p>
                 <p className="font-semibold text-violet-200 not-italic">
                   La primera estrella.

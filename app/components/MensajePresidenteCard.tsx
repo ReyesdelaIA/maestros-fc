@@ -27,7 +27,7 @@ export default function MensajePresidenteCard() {
 
   return (
     <>
-      <section className="flex h-full min-h-[420px] flex-col rounded-2xl border border-zinc-700/80 bg-gradient-to-b from-zinc-900 to-zinc-950 p-4 shadow-xl">
+      <section className="flex h-full min-h-[380px] flex-col rounded-2xl border border-zinc-700/80 bg-gradient-to-b from-zinc-900 to-zinc-950 px-4 pt-4 pb-2 shadow-xl">
         <div className="mb-2 flex justify-start">
           <span className="inline-flex items-center rounded-full border border-zinc-600/70 bg-zinc-900/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-300">
             Febrero&nbsp;26
@@ -55,7 +55,7 @@ export default function MensajePresidenteCard() {
         <button
           type="button"
           onClick={abrir}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-600/50 bg-emerald-950/40 py-2.5 transition hover:bg-emerald-900/50 hover:border-emerald-500/60 active:scale-[0.98]"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-600/50 bg-emerald-950/40 py-2 transition hover:bg-emerald-900/50 hover:border-emerald-500/60 active:scale-[0.98]"
           aria-label="Abrir mensaje del presidente"
         >
           <span className="relative inline-flex">
@@ -83,10 +83,10 @@ export default function MensajePresidenteCard() {
           </span>
         </button>
 
-        <h2 className="mt-3 text-center text-sm font-bold uppercase tracking-tight text-zinc-50 md:text-base">
+        <h2 className="mt-2 text-center text-sm font-bold uppercase tracking-tight text-zinc-50 md:text-base">
           MENSAJE DEL PRESIDENTE
         </h2>
-        <p className="mt-2 text-center text-xs italic leading-relaxed text-zinc-400 md:text-sm">
+        <p className="mt-1 text-center text-xs italic leading-relaxed text-zinc-400 md:text-sm">
           Toca el sobre para ver el mensaje mensual.
         </p>
       </section>

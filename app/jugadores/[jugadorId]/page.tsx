@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { getCategoriaLabel } from "../../../lib/categoryLabels";
 import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
 import { getPlayerPhotoSrc } from "../../../lib/playerPhotos";
@@ -125,7 +126,7 @@ export default async function JugadorPage({ params }: PageProps) {
           <div className="mt-5 grid grid-cols-2 gap-2 text-sm">
             <div className="rounded-lg bg-zinc-900/80 p-2">
               <p className="text-[10px] uppercase text-zinc-500">Categoría</p>
-              <p className="text-zinc-200">{jugador.categoria ?? "-"}</p>
+              <p className="text-zinc-200">{getCategoriaLabel(jugador.categoria) || "-"}</p>
             </div>
             <div className="rounded-lg bg-zinc-900/80 p-2">
               <p className="text-[10px] uppercase text-zinc-500">Dorsal</p>
