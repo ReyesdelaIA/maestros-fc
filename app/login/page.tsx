@@ -23,10 +23,12 @@ function LoginPageContent() {
 
   const getRedirectBaseUrl = () => {
     const origin = window.location.origin;
-    // En WebView de Capacitor, origin puede ser capacitor://localhost.
-    // Supabase no acepta ese esquema y cae al Site URL (Vercel) si no forzamos un URL web.
-    if (origin.startsWith("capacitor://") || origin.startsWith("ionic://")) {
-      return "http://192.168.7.139:3000";
+    if (
+      origin.startsWith("capacitor://") ||
+      origin.startsWith("ionic://") ||
+      origin.includes("localhost")
+    ) {
+      return "https://maestros-fc.vercel.app";
     }
     return origin;
   };

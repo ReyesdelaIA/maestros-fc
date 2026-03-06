@@ -8,8 +8,16 @@ const config: CapacitorConfig = {
   webDir: 'www',
   server: {
     url: serverUrl || 'https://maestros-fc.vercel.app',
-    // Necesario para apuntar a http://IP_LOCAL en desarrollo.
     cleartext: true,
+    allowNavigation: [
+      'maestros-fc.vercel.app',
+      '*.vercel.app',
+      '*.supabase.co',
+      'accounts.google.com',
+      '*.google.com',
+      '*.googleapis.com',
+      '*.gstatic.com',
+    ],
   },
 };
 
