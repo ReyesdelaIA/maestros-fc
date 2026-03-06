@@ -6,6 +6,11 @@ import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
+function isNativeApp(): boolean {
+  if (typeof window === "undefined") return false;
+  return !!(window as unknown as Record<string, unknown>).Capacitor;
+}
+
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -21,18 +26,6 @@ function LoginPageContent() {
   const [info, setInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const getRedirectBaseUrl = () => {
-    const origin = window.location.origin;
-    if (
-      origin.startsWith("capacitor://") ||
-      origin.startsWith("ionic://") ||
-      origin.includes("localhost")
-    ) {
-      return "https://maestros-fc.vercel.app";
-    }
-    return origin;
-  };
-
   useEffect(() => {
     const check = async () => {
       const { data } = await supabase.auth.getSession();
@@ -41,18 +34,108 @@ function LoginPageContent() {
     void check();
   }, [nextPath, router]);
 
+  // En la app nativa, escuchar el deep link de vuelta tras OAuth
+  useEffect(() => {
+    if (!isNativeApp()) return;
+
+    let cleanup: (() => void) | undefined;
+
+    const setup = async () => {
+      try {
+        const { App } = await import("@capacitor/app");
+        const listener = await App.addListener("appUrlOpen", async ({ url }) => {
+          if (!url.includes("login-callback")) return;
+
+          // Cerrar el browser in-app
+          try {
+            const { Browser } = await import("@capacitor/browser");
+            await Browser.close();
+          } catch {}
+
+          // Extraer tokens del URL (hash fragment o query params)
+          const parsed = new URL(url.replace("com.maestrosfc.app://", "https://placeholder/"));
+
+          // PKCE flow: Supabase pone el code en query params
+          const code = parsed.searchParams.get("code");
+          if (code) {
+            const { error: exchangeError } =
+              await supabase.auth.exchangeCodeForSession(code);
+            if (exchangeError) {
+              setError(exchangeError.message);
+              setLoadingGoogle(false);
+              return;
+            }
+            router.replace(nextPath);
+            return;
+          }
+
+          // Implicit flow: tokens en hash
+          const hashParams = new URLSearchParams(
+            parsed.hash.startsWith("#") ? parsed.hash.slice(1) : parsed.hash,
+          );
+          const accessToken = hashParams.get("access_token");
+          const refreshToken = hashParams.get("refresh_token");
+          if (accessToken && refreshToken) {
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (sessionError) {
+              setError(sessionError.message);
+              setLoadingGoogle(false);
+              return;
+            }
+            router.replace(nextPath);
+            return;
+          }
+
+          setError("No se pudo completar el inicio de sesión.");
+          setLoadingGoogle(false);
+        });
+        cleanup = () => listener.remove();
+      } catch {}
+    };
+
+    void setup();
+    return () => cleanup?.();
+  }, [nextPath, router]);
+
   const signInGoogle = async () => {
     setLoadingGoogle(true);
     setError(null);
     setInfo(null);
-    const redirectTo = `${getRedirectBaseUrl()}/login`;
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo },
-    });
-    if (authError) {
-      setError(authError.message);
-      setLoadingGoogle(false);
+
+    if (isNativeApp()) {
+      // Nativo: abrir browser seguro in-app (ASWebAuthenticationSession)
+      const redirectTo = "com.maestrosfc.app://login-callback";
+      const { data, error: authError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo, skipBrowserRedirect: true },
+      });
+      if (authError || !data.url) {
+        setError(authError?.message ?? "Error al conectar con Google");
+        setLoadingGoogle(false);
+        return;
+      }
+      try {
+        const { Browser } = await import("@capacitor/browser");
+        await Browser.open({ url: data.url, presentationStyle: "popover" });
+      } catch (e) {
+        setError("No se pudo abrir el navegador de autenticación.");
+        setLoadingGoogle(false);
+      }
+    } else {
+      // Web: redirect normal
+      const origin = window.location.origin;
+      const redirectTo = `${origin}/login`;
+      const { error: authError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo },
+      });
+      if (authError) {
+        setError(authError.message);
+        setLoadingGoogle(false);
+      }
     }
   };
 
@@ -61,7 +144,10 @@ function LoginPageContent() {
     setLoadingEmail(true);
     setError(null);
     setInfo(null);
-    const redirectTo = `${getRedirectBaseUrl()}/login`;
+    const origin = isNativeApp()
+      ? "https://maestros-fc.vercel.app"
+      : window.location.origin;
+    const redirectTo = `${origin}/login`;
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: redirectTo },
