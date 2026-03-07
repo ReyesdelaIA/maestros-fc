@@ -3,6 +3,7 @@ import { getCategoriaLabel } from "../../../lib/categoryLabels";
 import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
 import { getPlayerPhotoSrc } from "../../../lib/playerPhotos";
+import CumplePhoto from "../../components/CumplePhoto";
 
 type PageProps = {
   params: Promise<{
@@ -100,12 +101,10 @@ export default async function JugadorPage({ params }: PageProps) {
         <section className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4">
           <div className="relative mx-auto h-44 w-44 overflow-hidden rounded-2xl bg-zinc-900">
             {fotoSrc ? (
-              <Image
+              <CumplePhoto
                 src={fotoSrc}
                 alt={`${jugador.nombre} ${jugador.apellido}`}
-                fill
                 sizes="176px"
-                className="object-cover"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-xs text-zinc-500">

@@ -27,67 +27,49 @@ export default function StickerDelMesCard() {
 
   return (
     <>
-      <section className="flex h-full min-h-[420px] flex-col rounded-2xl border-2 border-amber-400/60 bg-gradient-to-br from-amber-950/90 via-orange-950/80 to-yellow-950/70 p-4 shadow-lg shadow-amber-900/40">
-        <div className="mb-2 flex justify-start">
-          <span className="inline-flex items-center rounded-full border border-amber-400/80 bg-amber-900/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-100">
-            Febrero&nbsp;26
+      <button
+        type="button"
+        onClick={abrir}
+        className="group/card flex h-full min-h-[360px] w-full cursor-pointer flex-col rounded-2xl border-2 border-amber-400/60 bg-gradient-to-br from-amber-950/90 via-orange-950/80 to-yellow-950/70 px-4 pt-3 pb-3 text-left shadow-lg shadow-amber-900/40 transition active:scale-[0.99]"
+      >
+        <div className="flex items-center justify-between rounded-xl border border-amber-400/50 bg-amber-900/50 px-3 py-2.5">
+          <h2 className="text-[12px] font-bold uppercase tracking-tight text-amber-100">
+            El Sticker del Mes
+          </h2>
+          <span className="relative inline-flex">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`h-5 w-5 ${visto ? "text-amber-400/70" : "text-amber-400"}`} aria-hidden>
+              <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clipRule="evenodd" />
+            </svg>
+            {!visto && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-zinc-950">
+                1
+              </span>
+            )}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={abrir}
-          className="group mx-auto block w-full max-w-[85%] overflow-hidden rounded-2xl border border-amber-500/60 bg-black/30 transition active:scale-[0.98]"
-          aria-label="Abrir sticker del mes"
-        >
+
+        <div className="mt-3 mx-auto block w-full max-w-[85%] overflow-hidden rounded-xl border border-amber-500/40 bg-black/30">
           <div className="relative h-44 w-full">
             <Image
               src="/stikerperro.png"
               alt="Sticker del mes"
               fill
               sizes="240px"
-              className="h-full w-full object-cover object-center group-hover:opacity-90"
+              className="object-cover object-center transition group-hover/card:opacity-90"
             />
           </div>
-        </button>
-        <button
-          type="button"
-          onClick={abrir}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-amber-400/60 bg-amber-950/50 py-2.5 transition hover:bg-amber-900/60 hover:border-amber-400/70 active:scale-[0.98]"
-          aria-label="Ver sticker"
-        >
-          <span className="relative inline-flex">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="h-5 w-5 text-amber-400"
-              aria-hidden
-            >
-              <path d="M12 9a3.75 3.75 0 1 0 0 7.5A3.75 3.75 0 0 0 12 9Z" />
-              <path fillRule="evenodd" d="M9.344 3.07a49.52 49.52 0 0 1 5.312 0c.967.052 1.83.585 2.732 1.235a.75.75 0 0 1-.326 1.378A51.76 51.76 0 0 0 9.574 5.17a.75.75 0 0 1-.23-1.1Z" clipRule="evenodd" />
-            </svg>
-            {!visto && (
-              <span
-                className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-lg shadow-red-900/50 ring-2 ring-zinc-900"
-                aria-hidden
-              >
-                1
-              </span>
-            )}
-          </span>
-          <span className="text-xs font-semibold text-amber-200">
-            Toca para ver el sticker
-          </span>
-        </button>
-        <h2 className="mt-3 text-center text-sm font-bold uppercase tracking-tight text-amber-100 md:text-base">
-          EL STICKER DEL MES
-        </h2>
-        <p className="mt-2 text-center text-xs italic leading-relaxed text-amber-200/90 md:text-sm">
-          Toca para ver el sticker del mes.
-        </p>
-      </section>
+        </div>
 
-      {/* Modal / Pop-up */}
+        <div className="mt-3 w-full text-center">
+          <p className="text-[10px] uppercase tracking-wide text-zinc-500">
+            Febrero 2026
+          </p>
+          <p className="mt-0.5 inline-block rounded-lg border border-amber-400/50 bg-amber-500/20 px-3 py-1 text-sm font-semibold text-zinc-50 shadow-[0_0_12px_rgba(251,191,36,0.15)]">
+            El que entiende, entiende
+          </p>
+        </div>
+      </button>
+
       {abierto && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"

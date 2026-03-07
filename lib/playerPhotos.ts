@@ -19,12 +19,23 @@ function playerKey(player: PlayerLike): string {
   return normalizeText(`${player.nombre} ${apellidoPaterno(player.apellido)}`);
 }
 
-// Fotos conocidas hoy. Cuando subamos más fotos, se agregan aquí.
-const PHOTO_BY_PLAYER_KEY: Record<string, string> = {
+/** Ruta automática: /fotos-jugadores/nombre-apellido.jpg (ej: felipe-huidobro.jpg) */
+function autoPhotoPath(player: PlayerLike): string {
+  const key = playerKey(player).replace(/\s+/g, "-");
+  return `/fotos-jugadores/${key}.jpg`;
+}
+
+// Sobrescribe manuales si hace falta (ej. apodo vs nombre en DB, otro apellido)
+const PHOTO_OVERRIDE: Record<string, string> = {
   "rodrigo garces": "/toto.jpg",
+  "luis moller": "/fotos-jugadores/lucho-moller.png",
+  "felipe huidobro": "/fotos-jugadores/felipe-juidobro.png",
+  "felipe guidobro": "/fotos-jugadores/felipe-juidobro.png",
+  "felipe juidobro": "/fotos-jugadores/felipe-juidobro.png",
 };
 
 export function getPlayerPhotoSrc(player: PlayerLike): string | null {
   const key = playerKey(player);
-  return PHOTO_BY_PLAYER_KEY[key] ?? null;
+  if (PHOTO_OVERRIDE[key]) return PHOTO_OVERRIDE[key];
+  return autoPhotoPath(player);
 }

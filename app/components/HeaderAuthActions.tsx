@@ -36,14 +36,14 @@ export default function HeaderAuthActions() {
   }, []);
 
   if (checking) {
-    return <div className="h-8 w-32 rounded-full bg-zinc-900/70" />;
+    return <div className="h-7 w-24 rounded-full bg-zinc-800/50" />;
   }
 
   if (!user) {
     return (
       <Link
         href="/login?next=%2F"
-        className="inline-flex items-center rounded-full border border-sky-500/70 bg-sky-500/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-sky-200 hover:bg-sky-500/30"
+        className="inline-flex items-center rounded-full border border-emerald-500/50 bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-300 transition hover:bg-emerald-500/20"
       >
         Iniciar sesión
       </Link>
@@ -51,22 +51,15 @@ export default function HeaderAuthActions() {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Link
-        href="/asistencia"
-        className="inline-flex items-center rounded-full border border-sky-500/70 bg-sky-500/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-sky-200 hover:bg-sky-500/30"
-      >
-        Confirmar asistencia
-      </Link>
+    <div className="flex items-center gap-1.5">
       {isAdminEmail(user.email) && (
         <Link
           href="/admin"
-          className="inline-flex items-center rounded-full border border-emerald-500/70 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-300 hover:bg-emerald-500/20"
+          className="inline-flex items-center rounded-full border border-zinc-700/60 bg-zinc-800/40 px-2.5 py-0.5 text-[10px] font-medium text-zinc-400 transition hover:text-zinc-200"
         >
-          Registrar resultado
+          Admin
         </Link>
       )}
     </div>
   );
 }
-

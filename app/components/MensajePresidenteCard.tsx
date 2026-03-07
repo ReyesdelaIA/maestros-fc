@@ -27,71 +27,58 @@ export default function MensajePresidenteCard() {
 
   return (
     <>
-      <section className="flex h-full min-h-[380px] flex-col rounded-2xl border border-zinc-700/80 bg-gradient-to-b from-zinc-900 to-zinc-950 px-4 pt-4 pb-2 shadow-xl">
-        <div className="mb-2 flex justify-start">
-          <span className="inline-flex items-center rounded-full border border-zinc-600/70 bg-zinc-900/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-300">
-            Febrero&nbsp;26
+      <button
+        type="button"
+        onClick={abrir}
+        className="group/card flex h-full min-h-[360px] w-full cursor-pointer flex-col rounded-2xl border border-zinc-700/80 bg-gradient-to-b from-zinc-900 to-zinc-950 px-4 pt-3 pb-3 text-left shadow-xl transition active:scale-[0.99]"
+      >
+        <div className="flex items-center justify-between rounded-xl border border-zinc-600/60 bg-zinc-900/80 px-3 py-2.5">
+          <h2 className="text-[12px] font-bold uppercase tracking-tight text-zinc-50">
+            Mensaje del Presidente
+          </h2>
+          <span className="relative inline-flex">
+            {visto ? (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-emerald-400/80" aria-hidden>
+                <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+              </svg>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-emerald-400" aria-hidden>
+                  <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                  <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+                </svg>
+                <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-zinc-950">
+                  1
+                </span>
+              </>
+            )}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={abrir}
-          className="group mx-auto w-full max-w-[85%] overflow-hidden rounded-2xl bg-black/40 transition active:scale-[0.98]"
-          aria-label="Abrir mensaje"
-        >
+
+        <div className="mt-3 mx-auto w-full max-w-[85%] overflow-hidden rounded-xl bg-black/40">
           <div className="relative h-44 w-full">
             <Image
               src="/presidente.png"
               alt="Presidente del club"
               fill
               sizes="240px"
-              className="h-full w-full object-cover object-top group-hover:opacity-90"
+              className="object-cover object-top transition group-hover/card:opacity-90"
               priority
             />
           </div>
-        </button>
+        </div>
 
-        {/* Sobre con badge de mensaje no leído */}
-        <button
-          type="button"
-          onClick={abrir}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-600/50 bg-emerald-950/40 py-2 transition hover:bg-emerald-900/50 hover:border-emerald-500/60 active:scale-[0.98]"
-          aria-label="Abrir mensaje del presidente"
-        >
-          <span className="relative inline-flex">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="h-6 w-6 text-emerald-400"
-              aria-hidden
-            >
-              <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
-              <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
-            </svg>
-            {!visto && (
-              <span
-                className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-lg shadow-red-900/50 ring-2 ring-zinc-900"
-                aria-hidden
-              >
-                1
-              </span>
-            )}
-          </span>
-          <span className="text-xs font-semibold text-emerald-300">
-            Nuevo mensaje — ¡Toca para leer!
-          </span>
-        </button>
+        <div className="mt-3 w-full text-center">
+          <p className="text-[10px] uppercase tracking-wide text-zinc-500">
+            Febrero 2026
+          </p>
+          <p className="mt-0.5 inline-block rounded-lg border border-amber-400/50 bg-amber-500/20 px-3 py-1 text-sm font-semibold text-zinc-50 shadow-[0_0_12px_rgba(251,191,36,0.15)]">
+            Sebastián Benavente
+          </p>
+        </div>
+      </button>
 
-        <h2 className="mt-2 text-center text-sm font-bold uppercase tracking-tight text-zinc-50 md:text-base">
-          MENSAJE DEL PRESIDENTE
-        </h2>
-        <p className="mt-1 text-center text-xs italic leading-relaxed text-zinc-400 md:text-sm">
-          Toca el sobre para ver el mensaje mensual.
-        </p>
-      </section>
-
-      {/* Modal / Pop-up */}
       {abierto && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
@@ -104,7 +91,6 @@ export default function MensajePresidenteCard() {
             className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-950 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header con cerrar */}
             <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900/80 px-4 py-3">
               <h2 id="modal-titulo" className="text-sm font-bold uppercase text-emerald-400">
                 Mensaje del presidente
@@ -121,7 +107,6 @@ export default function MensajePresidenteCard() {
               </button>
             </div>
 
-            {/* Contenido desplazable — más ancho, menos scroll */}
             <div className="max-h-[calc(90vh-60px)] overflow-y-auto p-6">
               <p className="mb-4 text-[10px] font-medium uppercase tracking-wide text-zinc-500">
                 Febrero 2026

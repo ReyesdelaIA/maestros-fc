@@ -7,8 +7,8 @@ import RecuerdoMaestroCard from "./components/RecuerdoMaestroCard";
 import StickerDelMesCard from "./components/StickerDelMesCard";
 import EntrevistaMaestraCard from "./components/EntrevistaMaestraCard";
 import FixtureCard from "./components/FixtureCard";
+import CumpleCard from "./components/CumpleCard";
 import UserGreeting from "./components/UserGreeting";
-import HeaderAuthActions from "./components/HeaderAuthActions";
 import BottomNav from "./components/BottomNav";
 import TitulosDetalleExpandable from "./components/TitulosDetalleExpandable";
 import { getEquipoTitulosLabel } from "../lib/categoryLabels";
@@ -515,35 +515,13 @@ export default async function Home({
       >
         {/* Header */}
         <header
-          className="-mx-4 flex flex-col gap-4 border-b border-emerald-500/40 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.30),rgba(2,6,23,0.9)_65%)] px-4 pb-6 shadow-[0_0_34px_rgba(16,185,129,0.18)] sm:-mx-6 sm:flex-row sm:items-end sm:justify-between sm:px-6 lg:-mx-8 lg:px-8"
-          style={{ paddingTop: "max(env(safe-area-inset-top), 3.5rem)" }}
+          className="-mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+          style={{ paddingTop: "max(env(safe-area-inset-top), 0.75rem)" }}
         >
-          <div className="flex items-center gap-4">
-            <Image
-              src="/logo_maestros.png"
-              alt="Escudo Maestros FC"
-              width={104}
-              height={104}
-              sizes="104px"
-              className="h-[92px] w-[92px] object-contain sm:h-[104px] sm:w-[104px]"
-              priority
-            />
-            <div className="pt-1 sm:pt-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-400">
-                Club de Fútbol
-              </p>
-              <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-50 sm:text-4xl">
-                Maestros FC
-              </h1>
-            </div>
-          </div>
-
-          <div className="flex w-full items-center justify-end gap-2 sm:w-auto sm:justify-end">
-            <HeaderAuthActions />
+          <div className="flex items-center justify-between gap-2 rounded-2xl bg-white/95 px-3 py-2 shadow-[0_10px_24px_rgba(0,0,0,0.22)]">
+            <UserGreeting />
           </div>
         </header>
-
-        <UserGreeting />
 
         <div
           className={
@@ -556,87 +534,21 @@ export default async function Home({
           {tab === "general" && (
             <section className="grid gap-4 md:grid-cols-2">
               <MensajePresidenteCard />
-              <article className="flex h-full min-h-[380px] flex-col rounded-2xl border border-emerald-700/60 bg-gradient-to-b from-emerald-950/90 via-emerald-950/70 to-zinc-950 px-4 pt-4 pb-2 shadow-md shadow-emerald-900/50">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
-                    El cumpleaños Maestro
-                  </p>
-                  {proximoCumple && (
-                    <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-200">
-                      {proximoCumpleFechaEtiqueta}
-                    </span>
-                  )}
-                </div>
-                <div className="mt-2 flex flex-1 flex-col items-center gap-2">
-                  <div className="relative h-44 w-full max-w-[260px] overflow-hidden rounded-xl bg-black/60">
-                    {proximoCumpleFoto ? (
-                      <Image
-                        src={proximoCumpleFoto}
-                        alt="Cumpleañero Maestro"
-                        fill
-                        sizes="260px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-center text-xs text-zinc-400">
-                        Foto pendiente
-                      </div>
-                    )}
-                  </div>
-                  {proximoCumple ? (
-                    <div className="w-full space-y-1.5 text-center">
-                      <div>
-                        <p className="text-[11px] uppercase tracking-wide text-zinc-500">
-                          Próximo cumpleañero
-                        </p>
-                        <p className="mt-0.5 text-sm font-semibold text-zinc-50">
-                          {proximoCumple.jugador.nombre}
-                          {proximoCumple.jugador.apodo ? (
-                            <>
-                              {" "}
-                              <span className="font-bold italic text-amber-300">
-                                {proximoCumple.jugador.apodo}
-                              </span>
-                            </>
-                          ) : null}{" "}
-                          <span className="text-zinc-50">
-                            {proximoCumple.jugador.apellido}
-                          </span>
-                        </p>
-                      </div>
-                      <div className="flex items-end justify-between gap-4 text-left">
-                        <div>
-                          <p className="text-[11px] uppercase tracking-wide text-zinc-500">
-                            Fecha
-                          </p>
-                          <p className="text-sm font-medium text-zinc-100">
-                            {proximoCumpleFechaEtiqueta}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[11px] uppercase tracking-wide text-emerald-300">
-                            Cuenta regresiva
-                          </p>
-                          <p className="text-2xl font-extrabold tracking-tight text-emerald-200 sm:text-3xl">
-                            {proximoCumple.diasRestantes === 0
-                              ? "¡Hoy!"
-                              : `Quedan ${proximoCumple.diasRestantes} ${
-                                  proximoCumple.diasRestantes === 1
-                                    ? "día"
-                                    : "días"
-                                }`}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="mt-4 text-sm text-zinc-400 text-center">
-                      Aún no hay fechas de nacimiento registradas para calcular el
-                      próximo cumpleaños.
-                    </p>
-                  )}
-                </div>
-              </article>
+              <CumpleCard
+                jugador={
+                  proximoCumple
+                    ? {
+                        id: proximoCumple.jugador.id,
+                        nombre: proximoCumple.jugador.nombre,
+                        apodo: proximoCumple.jugador.apodo,
+                        apellido: proximoCumple.jugador.apellido,
+                      }
+                    : null
+                }
+                foto={proximoCumpleFoto}
+                fechaEtiqueta={proximoCumpleFechaEtiqueta}
+                diasRestantes={proximoCumple?.diasRestantes ?? 0}
+              />
               <RecuerdoMaestroCard />
               <EntrevistaMaestraCard />
               <StickerDelMesCard />
@@ -650,19 +562,14 @@ export default async function Home({
             </section>
           )}
 
-          {/* Resumen del último fin de semana */}
+          {/* Stats última fecha */}
           <section className="space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-zinc-50">
-                Resumen del último fin de semana
-              </h2>
-              <span className="rounded-full border border-emerald-500/60 bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
-                dic 2025
-              </span>
-            </div>
-            <span className="text-xs text-zinc-400">
-              Actualizado automáticamente desde Supabase
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-semibold text-zinc-50">
+              Stats última fecha 📊
+            </h2>
+            <span className="rounded-full border border-emerald-500/60 bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
+              dic 2025
             </span>
           </div>
 
@@ -866,10 +773,10 @@ export default async function Home({
               ) : null;
 
               return (
-                <div key={categoria} className="flex h-full flex-col gap-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+                <div key={categoria} className="flex h-full flex-col gap-1.5">
+                  <span className="inline-flex w-fit rounded-md border border-zinc-600/40 bg-zinc-800/40 px-2 py-0.5 text-[9px] font-medium uppercase tracking-widest text-zinc-500">
                     {etiquetaArriba}
-                  </p>
+                  </span>
 
                   <div className={vistaEquipo ? "grid grid-cols-2 gap-2.5" : ""}>
                     {cajaUltimo}

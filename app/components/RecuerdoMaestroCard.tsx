@@ -27,68 +27,50 @@ export default function RecuerdoMaestroCard() {
 
   return (
     <>
-      <section className="flex h-full min-h-[380px] flex-col rounded-2xl border border-violet-700/50 bg-gradient-to-b from-violet-950/50 to-zinc-950 px-4 pt-4 pb-2 shadow-xl">
-        <div className="mb-2 flex justify-start">
-          <span className="inline-flex items-center rounded-full border border-violet-500/60 bg-violet-950/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-300">
-            Recuerdo
+      <button
+        type="button"
+        onClick={abrir}
+        className="group/card flex h-full min-h-[360px] w-full cursor-pointer flex-col rounded-2xl border border-violet-700/50 bg-gradient-to-b from-violet-950/50 to-zinc-950 px-4 pt-3 pb-3 text-left shadow-xl transition active:scale-[0.99]"
+      >
+        <div className="flex items-center justify-between rounded-xl border border-violet-500/40 bg-violet-950/60 px-3 py-2.5">
+          <h2 className="text-[12px] font-bold uppercase tracking-tight text-zinc-50">
+            El Recuerdo Maestro
+          </h2>
+          <span className="relative inline-flex">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`h-5 w-5 ${visto ? "text-violet-400/70" : "text-violet-400"}`} aria-hidden>
+              <path d="M12 9a3.75 3.75 0 1 0 0 7.5A3.75 3.75 0 0 0 12 9Z" />
+              <path fillRule="evenodd" d="M9.344 3.071a49.52 49.52 0 0 1 5.312 0c.967.052 1.83.585 2.332 1.39l.821 1.317c.2.32.58.523.984.523h.908a2.25 2.25 0 0 1 2.25 2.25v7.2a2.25 2.25 0 0 1-2.25 2.25H4.3a2.25 2.25 0 0 1-2.25-2.25v-7.2A2.25 2.25 0 0 1 4.3 6.3h.907c.404 0 .785-.203.984-.523l.821-1.317c.502-.805 1.365-1.338 2.332-1.39ZM12 10.5a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" clipRule="evenodd" />
+            </svg>
+            {!visto && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-zinc-950">
+                1
+              </span>
+            )}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={abrir}
-          className="group mx-auto w-full max-w-[85%] overflow-hidden rounded-2xl bg-black/40 transition active:scale-[0.98]"
-          aria-label="Abrir recuerdo Maestro"
-        >
+
+        <div className="mt-3 mx-auto w-full max-w-[85%] overflow-hidden rounded-xl bg-black/40">
           <div className="relative h-44 w-full">
             <Image
               src="/campeones.png"
               alt="El recuerdo Maestro"
               fill
               sizes="240px"
-              className="h-full w-full object-cover object-center group-hover:opacity-90"
+              className="object-cover object-center transition group-hover/card:opacity-90"
             />
           </div>
-        </button>
-        <button
-          type="button"
-          onClick={abrir}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/50 bg-violet-950/40 py-2 transition hover:bg-violet-900/50 hover:border-violet-400/60 active:scale-[0.98]"
-          aria-label="Ver recuerdo"
-        >
-          <span className="relative inline-flex">
-            <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="h-5 w-5 text-violet-400"
-            aria-hidden
-          >
-            <path d="M12 9a3.75 3.75 0 1 0 0 7.5A3.75 3.75 0 0 0 12 9Z" />
-            <path fillRule="evenodd" d="M9.344 3.07a49.52 49.52 0 0 1 5.312 0c.967.052 1.83.585 2.732 1.235a.75.75 0 0 1-.326 1.378A51.76 51.76 0 0 0 9.574 5.17a.75.75 0 0 1-.23-1.1Z" clipRule="evenodd" />
-            <path d="M5.461 21.894a.75.75 0 0 1 .375-.657l2.172-1.086a.75.75 0 0 0 .375-.657V16.5a.75.75 0 0 0-1.5 0v2.599l-1.672.836a.75.75 0 0 1-.75 0Z" />
-          </svg>
-            {!visto && (
-              <span
-                className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-lg shadow-red-900/50 ring-2 ring-zinc-900"
-                aria-hidden
-              >
-                1
-              </span>
-            )}
-          </span>
-          <span className="text-xs font-semibold text-violet-300">
-            Toca para ver el recuerdo
-          </span>
-        </button>
-        <h2 className="mt-2 text-center text-sm font-bold uppercase tracking-tight text-zinc-50 md:text-base">
-          El recuerdo Maestro
-        </h2>
-        <p className="mt-1 text-center text-xs italic leading-relaxed text-zinc-400 md:text-sm">
-          Un momento especial de la historia del club.
-        </p>
-      </section>
+        </div>
 
-      {/* Modal / Pop-up */}
+        <div className="mt-3 w-full text-center">
+          <p className="text-[10px] uppercase tracking-wide text-zinc-500">
+            Esto ocurrió en agosto del 2024…
+          </p>
+          <p className="mt-0.5 inline-block rounded-lg border border-amber-400/50 bg-amber-500/20 px-3 py-1 text-sm font-semibold text-zinc-50 shadow-[0_0_12px_rgba(251,191,36,0.15)]">
+            Momento especial en la historia del club
+          </p>
+        </div>
+      </button>
+
       {abierto && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"

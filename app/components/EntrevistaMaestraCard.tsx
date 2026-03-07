@@ -26,66 +26,47 @@ export default function EntrevistaMaestraCard() {
 
   return (
     <>
-      <section className="flex h-full min-h-[380px] flex-col rounded-2xl border border-sky-700/60 bg-gradient-to-b from-sky-950/80 via-slate-950 to-zinc-950 px-4 pt-4 pb-2 shadow-xl shadow-sky-900/40">
-        <div className="mb-2 flex justify-start">
-          <span className="inline-flex items-center rounded-full border border-sky-500/70 bg-sky-950/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-200">
-            Entrevista
-          </span>
-        </div>
-
-        <button
-          type="button"
-          onClick={abrir}
-          className="group mx-auto w-full max-w-[85%] overflow-hidden rounded-2xl bg-black/40 transition active:scale-[0.98]"
-          aria-label="Abrir entrevista Maestra"
-        >
-          <div className="relative h-44 w-full overflow-hidden rounded-2xl bg-black/70">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/raullagos.png"
-              alt="Entrevistado del mes: Raúl Lagos"
-              className="h-full w-full object-cover object-center group-hover:opacity-90"
-            />
-          </div>
-        </button>
-
-        <button
-          type="button"
-          onClick={abrir}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-sky-500/60 bg-sky-950/40 py-2 transition hover:bg-sky-900/60 hover:border-sky-400/70 active:scale-[0.98]"
-          aria-label="Ver entrevista"
-        >
+      <button
+        type="button"
+        onClick={abrir}
+        className="group/card flex h-full min-h-[360px] w-full cursor-pointer flex-col rounded-2xl border border-sky-700/60 bg-gradient-to-b from-sky-950/80 via-slate-950 to-zinc-950 px-4 pt-3 pb-3 text-left shadow-xl shadow-sky-900/40 transition active:scale-[0.99]"
+      >
+        <div className="flex items-center justify-between rounded-xl border border-sky-500/40 bg-sky-950/60 px-3 py-2.5">
+          <h2 className="text-[12px] font-bold uppercase tracking-tight text-sky-100">
+            Entrevista Maestra
+          </h2>
           <span className="relative inline-flex">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="h-5 w-5 text-sky-300"
-              aria-hidden
-            >
-              <path d="M4.5 5.25A3.75 3.75 0 0 1 8.25 1.5h7.5a3.75 3.75 0 0 1 3.75 3.75v8.25a3.75 3.75 0 0 1-3.75 3.75h-1.757l-2.771 2.771A.75.75 0 0 1 9 18.75V17.25H8.25A3.75 3.75 0 0 1 4.5 13.5v-8.25Z" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`h-5 w-5 ${visto ? "text-sky-400/70" : "text-sky-400"}`} aria-hidden>
+              <path fillRule="evenodd" d="M4.848 2.771A49.144 49.144 0 0 1 12 2.25c2.43 0 4.817.178 7.152.52 1.978.29 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.68-3.348 3.97a48.901 48.901 0 0 1-3.476.383.39.39 0 0 0-.297.17l-2.755 4.133a.75.75 0 0 1-1.248 0l-2.755-4.133a.39.39 0 0 0-.297-.17 48.9 48.9 0 0 1-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97Z" clipRule="evenodd" />
             </svg>
             {!visto && (
-              <span
-                className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-lg shadow-red-900/50 ring-2 ring-zinc-900"
-                aria-hidden
-              >
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-zinc-950">
                 1
               </span>
             )}
           </span>
-          <span className="text-xs font-semibold text-sky-200">
-            Toca para ver la entrevista
-          </span>
-        </button>
+        </div>
 
-        <h2 className="mt-2 text-center text-sm font-bold uppercase tracking-tight text-sky-100 md:text-base">
-          ENTREVISTA MAESTRA
-        </h2>
-        <p className="mt-1 text-center text-xs italic leading-relaxed text-sky-100/80 md:text-sm">
-          Raúl Lagos Izquierdo – Jugador de SS Fútbol.
-        </p>
-      </section>
+        <div className="mt-3 mx-auto w-full max-w-[85%] overflow-hidden rounded-xl bg-black/40">
+          <div className="relative h-44 w-full overflow-hidden rounded-xl bg-black/70">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/raullagos.png"
+              alt="Entrevistado del mes: Raúl Lagos"
+              className="h-full w-full object-cover object-center transition group-hover/card:opacity-90"
+            />
+          </div>
+        </div>
+
+        <div className="mt-3 w-full text-center">
+          <p className="text-[10px] uppercase tracking-wide text-zinc-500">
+            ¿Viste lo que dijo? Léela ya
+          </p>
+          <p className="mt-0.5 inline-block rounded-lg border border-amber-400/50 bg-amber-500/20 px-3 py-1 text-sm font-semibold text-zinc-50 shadow-[0_0_12px_rgba(251,191,36,0.15)]">
+            Raúl Lagos Izquierdo — SS Fútbol
+          </p>
+        </div>
+      </button>
 
       {abierto && (
         <div
@@ -180,4 +161,3 @@ export default function EntrevistaMaestraCard() {
     </>
   );
 }
-
